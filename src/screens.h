@@ -4,7 +4,14 @@
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
 //----------------------------------------------------------------------------------
-typedef enum GameScreen { UNKNOWN = -1, LOGO = 0, TITLE, OPTIONS, GAMEPLAY, ENDING } GameScreen;
+typedef enum GameScreen {
+    UNKNOWN = -1,
+    LOGO = 0,
+    TITLE,
+    OPTIONS,
+    GAMEPLAY,
+    ENDING
+} GameScreen;
 
 //----------------------------------------------------------------------------------
 // Global Variables Declaration (shared by several modules)
@@ -15,7 +22,7 @@ extern Music music;
 extern Sound fxCoin;
 
 #ifdef __cplusplus
-extern "C" {            // Prevents name mangling of functions
+extern "C" { // Prevents name mangling of functions
 #endif
 
 //----------------------------------------------------------------------------------
