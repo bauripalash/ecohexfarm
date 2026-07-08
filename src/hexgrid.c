@@ -1,5 +1,6 @@
 #include "hexgrid.h"
 #include "raylib.h"
+#include "screens.h"
 #include "utils.h"
 #include <math.h>
 #include <stdlib.h>
@@ -53,7 +54,7 @@ void FillHexGrid(
             }
         }
     }
-    *count = hexIdx + 1;
+    *count = hexIdx;
 }
 
 void DrawHexGrid(HexMapTile *tiles, int count, float thickness) {
@@ -62,5 +63,6 @@ void DrawHexGrid(HexMapTile *tiles, int count, float thickness) {
         DrawHexShapeBordered(
             tile.pos, tile.size, thickness, tile.color, tile.border
         );
+        DrawTextEx(font, TextFormat("%d", i), tile.pos, 16, 0.0f, tile.border);
     }
 }

@@ -4,6 +4,7 @@
 #include "hexgrid.h"
 #include "raylib.h"
 #include "screens.h"
+#include <stdbool.h>
 
 #define MAP_RADIUS      2
 #define TILE_RADIUS     82.0f
@@ -58,11 +59,13 @@ static void initNavTileGrid(void) {
 }
 
 static void initFirstBugs(void) {
-    bugCount = 0;
-    for (int i = 0; i < 4; i++) {
-        bugs[i] = NewHexBug(PbHexColorTPink);
-        bugCount++;
-    }
+    bugs[0] = NewGenesisBug(true);
+    bugs[0].pos = tiles[0].pos;
+
+    bugs[1] = NewGenesisBug(false);
+    bugs[1].pos = tiles[tileCount - 1].pos;
+
+    bugCount = 2;
 }
 
 // Gameplay Screen Initialization logic
@@ -73,6 +76,7 @@ void InitGameplayScreen(void) {
         (Vector2){WIN_SIZE / 2.0f, WIN_SIZE / 2.0f}, tiles, &tileCount,
         MAP_RADIUS, DEFAULT_HEX_SIZE, TILE_BG_COLOR, TILE_BRDR_COLOR
     );
+    TraceLog(LOG_WARNING, "Tiles->%d", tileCount);
     initNavTileGrid();
     initFirstBugs();
 }
