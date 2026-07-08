@@ -1,4 +1,5 @@
 #include "hexgrid.h"
+#include "draw.h"
 #include "raylib.h"
 #include "screens.h"
 #include "utils.h"
@@ -12,18 +13,19 @@ Vector2 HexCordToPx(HexVec cord, float size) {
 }
 
 void DrawHexShape(Vector2 pos, float size, Color color) {
-    DrawPoly(pos, 6, size, 0.0f, color);
+    // DrawPoly(pos, 6, size, 0.0f, color);
+    PBDrawHexagonFilled(pos, size, color);
 }
 
 void DrawHexShapeLine(Vector2 pos, float size, float thickness, Color color) {
-    DrawPolyLinesEx(pos, 6, size, 0.0f, thickness, color);
+    // DrawPolyLinesEx(pos, 6, size, 0.0f, thickness, color);
+    PBDrawHexagonLine(pos, size, thickness, color);
 }
 
 void DrawHexShapeBordered(
     Vector2 pos, float size, float thickness, Color bg, Color border
 ) {
-    DrawHexShape(pos, size, bg);
-    DrawHexShapeLine(pos, size, thickness, border);
+    PBDrawHexagon(pos, size, thickness, bg, border);
 }
 
 void FillHexGrid(
@@ -63,6 +65,7 @@ void DrawHexGrid(HexMapTile *tiles, int count, float thickness) {
         DrawHexShapeBordered(
             tile.pos, tile.size, thickness, tile.color, tile.border
         );
-        DrawTextEx(font, TextFormat("%d", i), tile.pos, 16, 0.0f, tile.border);
+        // DrawTextEx(font, TextFormat("%d", i), tile.pos, 16, 0.0f,
+        // tile.border);
     }
 }

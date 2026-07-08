@@ -3,7 +3,7 @@
 
 #include "raylib.h"
 
-#define DEFAULT_HEX_SIZE 82.0f
+#define DEFAULT_HEX_SIZE 20.0f
 
 typedef struct HexVec {
     int q;

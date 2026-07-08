@@ -1,3 +1,5 @@
+#include "colors.h"
+#include "config.h"
 #include "raylib.h"
 #include "screens.h"
 
@@ -32,19 +34,12 @@ void UpdateTitleScreen(void) {
 
 // Title Screen Draw logic
 void DrawTitleScreen(void) {
-    // TODO: Draw TITLE screen here!
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), GREEN);
-    Vector2 pos = {20, 10};
-    DrawTextEx(font, "TITLE SCREEN", pos, font.baseSize * 3.0f, 4, DARKGREEN);
-    DrawText(
-        "PRESS ENTER or TAP to JUMP to GAMEPLAY SCREEN", 120, 220, 20, DARKGREEN
-    );
+    DrawRectangleRec((Rectangle){0, 0, SCREEN_SIZE, SCREEN_SIZE}, PbColorVGray);
+    DrawTextEx(font, "< evoHex >", (Vector2){0, 0}, 32, 1.0f, PbColorVWhite);
 }
 
 // Title Screen Unload logic
-void UnloadTitleScreen(void) {
-    // TODO: Unload TITLE screen variables here!
-}
+void UnloadTitleScreen(void) {}
 
 // Title Screen should finish?
 int FinishTitleScreen(void) { return finishScreen; }

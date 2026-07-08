@@ -1,5 +1,6 @@
+#include "config.h"
 #include "raylib.h"
-#include "screens.h" // NOTE: Declares global (extern) variables and screens functions
+#include "screens.h"
 
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h> // Emscripten library
@@ -9,32 +10,14 @@
 #include <stdlib.h> // Required for:
 #include <string.h> // Required for:
 
-//----------------------------------------------------------------------------------
-// Defines and Macros
-//----------------------------------------------------------------------------------
-// Simple log system to avoid printf() calls if required
-// NOTE: Avoiding those calls, also avoids const strings memory usage
-#define SUPPORT_LOG_INFO
-#if defined(SUPPORT_LOG_INFO)
-#define LOG(...) printf(__VA_ARGS__)
-#else
-#define LOG(...)
-#endif
+// Global States
 
-//----------------------------------------------------------------------------------
-// Shared Variables Definition (global)
-// NOTE: Those variables are shared between modules through screens.h
-//----------------------------------------------------------------------------------
-GameScreen currentScreen = LOGO;
+GameScreen currentScreen = TITLE;
 Font font = {0};
 Music music = {0};
 Sound fxCoin = {0};
 
-//----------------------------------------------------------------------------------
-// Global Variables Definition (local to this module)
-//----------------------------------------------------------------------------------
-static const int screenWidth = 720;
-static const int screenHeight = 720;
+static RenderTexture2D screen = {0};
 
 // Required variables to manage screen transitions (fade-in, fade-out)
 static float transAlpha = 0.0f;
@@ -43,42 +26,34 @@ static bool transFadeOut = false;
 static int transFromScreen = -1;
 static GameScreen transToScreen = UNKNOWN;
 
-//----------------------------------------------------------------------------------
-// Module Functions Declaration
-//----------------------------------------------------------------------------------
-static void ChangeToScreen(
-    int screen
-); // Change to screen, no transition effect
+// Change to screen, no transition effect
+static void ChangeToScreen(int screen);
 
-static void TransitionToScreen(int screen); // Request transition to next screen
-static void UpdateTransition(void);         // Update transition effect
-static void DrawTransition(
-    void
-); // Draw transition effect (full-screen rectangle)
+// Request transition to next screen
+static void TransitionToScreen(int screen);
 
-static void UpdateDrawFrame(void); // Update and draw one frame
+// Update transition effect
+static void UpdateTransition(void);
 
-//----------------------------------------------------------------------------------
-// Program main entry point
-//----------------------------------------------------------------------------------
+// Draw transition effect (full-screen rectangle)
+static void DrawTransition(void);
+
+// Update and draw one frame
+static void UpdateDrawFrame(void);
+
 int main(void) {
-    // Initialization
-    //---------------------------------------------------------
     SetTraceLogLevel(LOG_WARNING);
-    InitWindow(screenWidth, screenHeight, "raylib game template");
+    InitWindow(WIN_SIZE, WIN_SIZE, "raylib game template");
+    screen = LoadRenderTexture(SCREEN_SIZE, SCREEN_SIZE);
 
-    InitAudioDevice(); // Initialize audio device
-
-    // Load global data (assets that must be available in all screens, i.e.
-    // font)
+    InitAudioDevice();
     font = LoadFont("resources/BIOSfontII.ttf");
 
     SetMusicVolume(music, 1.0f);
     PlayMusicStream(music);
 
-    // Setup and init first screen
-    // currentScreen = LOGO;
-    // InitLogoScreen();
+    // currentScreen = TITLE;
+    // InitTitleScreen();
 
     currentScreen = GAMEPLAY;
     InitGameplayScreen();
@@ -94,7 +69,6 @@ int main(void) {
 #endif
 
     switch (currentScreen) {
-        case LOGO: UnloadLogoScreen(); break;
         case TITLE: UnloadTitleScreen(); break;
         case OPTIONS: UnloadOptionsScreen(); break;
         case GAMEPLAY: UnloadGameplayScreen(); break;
@@ -115,7 +89,6 @@ int main(void) {
 static void ChangeToScreen(int screen) {
     // Unload current screen
     switch (currentScreen) {
-        case LOGO: UnloadLogoScreen(); break;
         case TITLE: UnloadTitleScreen(); break;
         case OPTIONS: UnloadOptionsScreen(); break;
         case GAMEPLAY: UnloadGameplayScreen(); break;
@@ -125,7 +98,6 @@ static void ChangeToScreen(int screen) {
 
     // Init next screen
     switch (screen) {
-        case LOGO: InitLogoScreen(); break;
         case TITLE: InitTitleScreen(); break;
         case OPTIONS: InitOptionsScreen(); break;
         case GAMEPLAY: InitGameplayScreen(); break;
@@ -158,7 +130,6 @@ static void UpdateTransition(void) {
 
             // Unload current screen
             switch (transFromScreen) {
-                case LOGO: UnloadLogoScreen(); break;
                 case TITLE: UnloadTitleScreen(); break;
                 case OPTIONS: UnloadOptionsScreen(); break;
                 case GAMEPLAY: UnloadGameplayScreen(); break;
@@ -168,7 +139,6 @@ static void UpdateTransition(void) {
 
             // Load next screen
             switch (transToScreen) {
-                case LOGO: InitLogoScreen(); break;
                 case TITLE: InitTitleScreen(); break;
                 case OPTIONS: InitOptionsScreen(); break;
                 case GAMEPLAY: InitGameplayScreen(); break;
@@ -211,12 +181,6 @@ static void UpdateDrawFrame(void) {
 
     if (!onTransition) {
         switch (currentScreen) {
-            case LOGO: {
-                UpdateLogoScreen();
-
-                if (FinishLogoScreen()) TransitionToScreen(TITLE);
-
-            } break;
             case TITLE: {
                 UpdateTitleScreen();
 
@@ -250,28 +214,33 @@ static void UpdateDrawFrame(void) {
         }
     } else
         UpdateTransition(); // Update transition (fade-in, fade-out)
-    //----------------------------------------------------------------------------------
 
-    // Draw
-    //----------------------------------------------------------------------------------
-    BeginDrawing();
+    BeginTextureMode(screen);
+    {
+        ClearBackground(RAYWHITE);
 
-    ClearBackground(RAYWHITE);
+        switch (currentScreen) {
+            case TITLE: DrawTitleScreen(); break;
+            case OPTIONS: DrawOptionsScreen(); break;
+            case GAMEPLAY: DrawGameplayScreen(); break;
+            case ENDING: DrawEndingScreen(); break;
+            default: break;
+        }
 
-    switch (currentScreen) {
-        case LOGO: DrawLogoScreen(); break;
-        case TITLE: DrawTitleScreen(); break;
-        case OPTIONS: DrawOptionsScreen(); break;
-        case GAMEPLAY: DrawGameplayScreen(); break;
-        case ENDING: DrawEndingScreen(); break;
-        default: break;
+        // Draw full screen rectangle in front of everything
+        if (onTransition) DrawTransition();
     }
+    EndTextureMode();
 
-    // Draw full screen rectangle in front of everything
-    if (onTransition) DrawTransition();
-
-    // DrawFPS(10, 10);
-
+    BeginDrawing();
+    {
+        ClearBackground(RAYWHITE);
+        DrawTexturePro(
+            screen.texture, (Rectangle){0, 0, SCREEN_SIZE, -SCREEN_SIZE},
+            (Rectangle){0, 0, WIN_SIZE, WIN_SIZE}, (Vector2){0, 0}, 0.0f, WHITE
+        );
+        // DrawFPS(10, 10);
+    }
     EndDrawing();
     //----------------------------------------------------------------------------------
 }

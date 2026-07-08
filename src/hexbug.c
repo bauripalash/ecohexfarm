@@ -1,5 +1,6 @@
 #include "hexbug.h"
 #include "config.h"
+#include "draw.h"
 #include "raylib.h"
 #include "utils.h"
 #include <stdbool.h>
@@ -16,7 +17,7 @@ HexBug NewGenesisBug(bool primary) {
 HexBug NewHexBug(int color) {
     Color geneticColor = GetColor(RGBtoRGBA(color));
     return (HexBug){
-        .pos = (Vector2){WIN_SIZE / 2.0f, WIN_SIZE / 2.0f},
+        .pos = (Vector2){SCREEN_SIZE / 2.0f, SCREEN_SIZE / 2.0f},
         .size = DEFAULT_BUG_SIZE,
         .gene = (HexGene){
             .red = geneticColor.r,
@@ -29,7 +30,8 @@ HexBug NewHexBug(int color) {
 }
 
 void DrawHexBug(HexBug *bug) {
-    DrawPolyLinesEx(
-        bug->pos, 6, bug->size, 0, DEFAULT_BUG_THICK, bug->gene.hColor
+    PBDrawHexagon(
+        bug->pos, bug->size, DEFAULT_BUG_THICK, bug->gene.hColor,
+        bug->gene.hColor
     );
 }

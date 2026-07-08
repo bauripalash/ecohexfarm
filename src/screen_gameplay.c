@@ -6,10 +6,9 @@
 #include "screens.h"
 #include <stdbool.h>
 
-#define MAP_RADIUS      2
-#define TILE_RADIUS     82.0f
+#define MAP_RADIUS      4
 #define MAX_TILES       100
-#define BG_COLOR        PbColorTGrayDarker
+#define BG_COLOR        BLACK
 #define TILE_BG_COLOR   PbColorTGrayDarker
 #define TILE_BRDR_COLOR PbColorTGrayLightest
 #define NAV_TILE_SIZE   30
@@ -25,7 +24,7 @@ typedef struct NavTile {
     Rectangle bounds;
 } NavTile;
 
-#define MAX_NAV_TILES WIN_SIZE
+#define MAX_NAV_TILES SCREEN_SIZE
 NavTile navTiles[MAX_NAV_TILES + 20];
 static int navTileCount = 0;
 
@@ -45,8 +44,8 @@ static void drawBackground(void) { DrawHexGrid(tiles, tileCount, 1); }
 static void initNavTileGrid(void) {
     int nTileCount = 0;
     Vector2 pos = {0, 0};
-    while (pos.y <= WIN_SIZE) {
-        while (pos.x <= WIN_SIZE) {
+    while (pos.y <= SCREEN_SIZE) {
+        while (pos.x <= SCREEN_SIZE) {
             navTiles[nTileCount].bounds =
                 (Rectangle){pos.x, pos.y, NAV_TILE_SIZE, NAV_TILE_SIZE};
             nTileCount++;
@@ -73,7 +72,7 @@ void InitGameplayScreen(void) {
     framesCounter = 0;
     finishScreen = 0;
     FillHexGrid(
-        (Vector2){WIN_SIZE / 2.0f, WIN_SIZE / 2.0f}, tiles, &tileCount,
+        (Vector2){SCREEN_SIZE / 2.0f, SCREEN_SIZE / 2.0f}, tiles, &tileCount,
         MAP_RADIUS, DEFAULT_HEX_SIZE, TILE_BG_COLOR, TILE_BRDR_COLOR
     );
     TraceLog(LOG_WARNING, "Tiles->%d", tileCount);
@@ -95,7 +94,7 @@ void UpdateGameplayScreen(void) {
 
 // Gameplay Screen Draw logic
 void DrawGameplayScreen(void) {
-    DrawRectangle(0, 0, WIN_SIZE, WIN_SIZE, BG_COLOR);
+    DrawRectangle(0, 0, SCREEN_SIZE, SCREEN_SIZE, BG_COLOR);
     drawBackground();
 
     for (int i = 0; i < bugCount; i++) {

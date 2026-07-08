@@ -4,8 +4,8 @@
 #include "raylib.h"
 #include <stdbool.h>
 
-#define DEFAULT_BUG_SIZE  20
-#define DEFAULT_BUG_THICK 5
+#define DEFAULT_BUG_SIZE  8
+#define DEFAULT_BUG_THICK 3
 
 #define BUG_MAX_HEALTH    100
 #define BUG_MIN_HEALTH    1

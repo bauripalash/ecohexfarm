@@ -1,12 +1,13 @@
 #ifndef SCREENS_H
 #define SCREENS_H
 
+#include "raylib.h"
+
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
 //----------------------------------------------------------------------------------
 typedef enum GameScreen {
     UNKNOWN = -1,
-    LOGO = 0,
     TITLE,
     OPTIONS,
     GAMEPLAY,
@@ -24,15 +25,6 @@ extern Sound fxCoin;
 #ifdef __cplusplus
 extern "C" { // Prevents name mangling of functions
 #endif
-
-//----------------------------------------------------------------------------------
-// Logo Screen Functions Declaration
-//----------------------------------------------------------------------------------
-void InitLogoScreen(void);
-void UpdateLogoScreen(void);
-void DrawLogoScreen(void);
-void UnloadLogoScreen(void);
-int FinishLogoScreen(void);
 
 //----------------------------------------------------------------------------------
 // Title Screen Functions Declaration
