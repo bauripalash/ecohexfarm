@@ -12,6 +12,8 @@
 *.map
 *.exp
 
+buildweb
+
 # Precompiled Headers
 *.gch
 *.pch

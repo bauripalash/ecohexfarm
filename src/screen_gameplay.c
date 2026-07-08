@@ -1,17 +1,15 @@
 #include "colors.h"
 #include "config.h"
 #include "hexbug.h"
+#include "hexgrid.h"
 #include "raylib.h"
 #include "screens.h"
-#include "utils.h"
-#include <math.h>
-#include <stdlib.h>
 
 #define MAP_RADIUS      2
 #define TILE_RADIUS     82.0f
 #define MAX_TILES       100
 #define BG_COLOR        PbColorTGrayDarker
-#define TILE_FG_COLOR   PbColorTGrayDarker
+#define TILE_BG_COLOR   PbColorTGrayDarker
 #define TILE_BRDR_COLOR PbColorTGrayLightest
 #define NAV_TILE_SIZE   30
 
@@ -19,14 +17,7 @@ static int framesCounter = 0;
 static int finishScreen = 0;
 static Color navTileBorder = {255, 100, 100, 20};
 
-typedef struct MapTile {
-    int q, r, s;
-    int circleRad;
-    Vector2 screenPos;
-    Color color;
-} MapTile;
-
-MapTile tiles[MAX_TILES];
+HexMapTile tiles[MAX_TILES];
 static int tileCount = 0;
 
 typedef struct NavTile {
@@ -41,31 +32,6 @@ static int navTileCount = 0;
 HexBug bugs[MAX_BUGS];
 static int bugCount = 0;
 
-static Vector2 hexToPx(int q, int r) {
-    float x = TILE_RADIUS * (3.0f / 2.0f * q);
-    float y = TILE_RADIUS * (sqrtf(3.0f) / 2.0f * q + sqrtf(3.0f) * r);
-    return (Vector2){x + WIN_SIZE / 2.0f, y + WIN_SIZE / 2.0f};
-}
-
-static void drawHexTiles(void) {
-    for (int i = 0; i < tileCount; i++) {
-        MapTile tile = tiles[i];
-        DrawPoly(tile.screenPos, 6, TILE_RADIUS, 0.0f, tile.color);
-        Color brdr = TILE_BRDR_COLOR;
-        float brdrThickness = 1.0f;
-        if (i == 5) {
-            brdr = PbColorTPinkLight;
-            brdrThickness = 2.0f;
-        }
-        DrawPolyLinesEx(
-            tile.screenPos, 6, TILE_RADIUS, 0.0f, brdrThickness, brdr
-        );
-        // DrawCircleLines(tile.screenPos.x, tile.screenPos.y, tile.circleRad,
-        // WHITE);
-        DrawTextEx(font, TextFormat("%d", i), tile.screenPos, 16, 1, brdr);
-    }
-}
-
 static void drawNavTiles(void) {
     for (int i = 0; i < navTileCount; i++) {
         NavTile tile = navTiles[i];
@@ -73,19 +39,13 @@ static void drawNavTiles(void) {
     }
 }
 
-static void drawBackground(void) {
-    drawHexTiles();
-
-    drawNavTiles();
-}
+static void drawBackground(void) { DrawHexGrid(tiles, tileCount, 1); }
 
 static void initNavTileGrid(void) {
     int nTileCount = 0;
     Vector2 pos = {0, 0};
     while (pos.y <= WIN_SIZE) {
         while (pos.x <= WIN_SIZE) {
-
-            TraceLog(LOG_WARNING, "->%d", nTileCount);
             navTiles[nTileCount].bounds =
                 (Rectangle){pos.x, pos.y, NAV_TILE_SIZE, NAV_TILE_SIZE};
             nTileCount++;
@@ -95,24 +55,6 @@ static void initNavTileGrid(void) {
         pos.y += NAV_TILE_SIZE;
     }
     navTileCount = nTileCount;
-}
-
-static void initTileGrid(void) {
-    tileCount = 0;
-    for (int q = -MAP_RADIUS; q <= MAP_RADIUS; q++) {
-        for (int r = -MAP_RADIUS; r <= MAP_RADIUS; r++) {
-            int s = -q - r;
-            if (abs(s) <= MAP_RADIUS) {
-                tiles[tileCount].q = q;
-                tiles[tileCount].r = r;
-                tiles[tileCount].s = s;
-                tiles[tileCount].screenPos = hexToPx(q, r);
-                tiles[tileCount].color = TILE_FG_COLOR;
-                tiles[tileCount].circleRad = CircleRadFromHexRad(TILE_RADIUS);
-                tileCount++;
-            }
-        }
-    }
 }
 
 static void initFirstBugs(void) {
@@ -127,7 +69,10 @@ static void initFirstBugs(void) {
 void InitGameplayScreen(void) {
     framesCounter = 0;
     finishScreen = 0;
-    initTileGrid();
+    FillHexGrid(
+        (Vector2){WIN_SIZE / 2.0f, WIN_SIZE / 2.0f}, tiles, &tileCount,
+        MAP_RADIUS, DEFAULT_HEX_SIZE, TILE_BG_COLOR, TILE_BRDR_COLOR
+    );
     initNavTileGrid();
     initFirstBugs();
 }

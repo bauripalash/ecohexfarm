@@ -1,5 +1,6 @@
 PROJECT:=ecohex
 BUILD_DIR:=build
+WEB_BUILD_DIR:=buildweb
 HEADERS=$(shell find src/ -path 'src/gen' -prune -o -path 'src/external' -prune -o -path 'src/tmpl' -prune -o -name '*.h' -print)
 SOURCES=$(shell find src/ -path 'src/gen' -prune -o -path 'src/external' -prune -o -path 'src/tmpl' -prune -o -name '*.c' -print)
 
@@ -14,9 +15,18 @@ run: build
 build:
 	cmake --build $(BUILD_DIR) --parallel
 
+.PHONY: webbuild
+webbuild:
+	cmake --build $(WEB_BUILD_DIR) --parallel
+
 .PHONY: setup
 setup:
 	cmake -S . -B $(BUILD_DIR)
+
+.PHONY: websetup
+websetup:
+	emcmake cmake -S . -B $(WEB_BUILD_DIR)
+
 
 .PHONY: fmt
 fmt:

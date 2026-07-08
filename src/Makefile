@@ -34,6 +34,7 @@ PROJECT_VERSION       ?= 1.0
 PROJECT_BUILD_PATH    ?= .
 PROJECT_SOURCE_FILES  ?= \
     game.c \
+	hexgrid.c \
     screen_logo.c \
     screen_title.c \
     screen_options.c \
