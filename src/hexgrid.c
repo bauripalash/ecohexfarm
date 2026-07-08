@@ -1,69 +1,81 @@
 #include "hexgrid.h"
 #include "draw.h"
 #include "raylib.h"
-#include "screens.h"
 #include "utils.h"
-#include <math.h>
+#include <stdbool.h>
 #include <stdlib.h>
 
-Vector2 HexCordToPx(HexVec cord, float size) {
-    float x = size * (3.0f / 2.0f * cord.q);
-    float y = size * (sqrtf(3.0f) / 2.0f * cord.q + sqrtf(3.0f) * cord.r);
-    return (Vector2){x, y};
-}
-
-void DrawHexShape(Vector2 pos, float size, Color color) {
-    // DrawPoly(pos, 6, size, 0.0f, color);
-    PBDrawHexagonFilled(pos, size, color);
-}
-
-void DrawHexShapeLine(Vector2 pos, float size, float thickness, Color color) {
-    // DrawPolyLinesEx(pos, 6, size, 0.0f, thickness, color);
-    PBDrawHexagonLine(pos, size, thickness, color);
-}
-
-void DrawHexShapeBordered(
-    Vector2 pos, float size, float thickness, Color bg, Color border
-) {
-    PBDrawHexagon(pos, size, thickness, bg, border);
-}
-
-void FillHexGrid(
+int FillHexGrid(
     Vector2 center,
     HexMapTile *tiles,
-    int *count,
     int gridRadius,
     float hexSize,
     Color bg,
     Color brdr
 ) {
     int hexIdx = 0;
-    Vector2 og = {center.x, center.y};
     for (int q = -gridRadius; q <= gridRadius; q++) {
         for (int r = -gridRadius; r <= gridRadius; r++) {
             int s = -q - r;
             if (abs(s) <= gridRadius) {
                 HexMapTile *tile = &tiles[hexIdx];
-                tile->cord = (HexVec){q, r};
+                tile->cord = (HexVec){q, r, s};
                 Vector2 pxl = HexCordToPx(tile->cord, hexSize);
                 tile->size = hexSize;
                 tile->pos = (Vector2){pxl.x + center.x, pxl.y + center.y};
                 tile->color = bg;
                 tile->border = brdr;
-                tile->s = s;
                 tile->colsnSize = CircleRadFromHexRad(hexSize);
                 hexIdx++;
             }
         }
     }
-    *count = hexIdx;
+    return hexIdx;
+}
+
+int GenerateNavTiles(
+    Vector2 center, HexNavTile *tiles, int gridRadius, float hexSize
+) {
+    int tileCount = 0;
+    for (int q = -gridRadius; q <= gridRadius; q++) {
+        for (int r = -gridRadius; r <= gridRadius; r++) {
+            int s = -q - r;
+            if (abs(s) > gridRadius) continue;
+            HexNavTile *tile = &tiles[tileCount];
+            tile->cord = (HexVec){.q = q, .r = r, .s = s};
+
+            Vector2 pxl = HexCordToPx(tile->cord, hexSize);
+            tile->pos = (Vector2){pxl.x + center.x, pxl.y + center.y};
+            tile->size = hexSize;
+            // todo: colsnSize
+            tile->hasFood = false;
+            tile->walkable = true;
+            tile->bugs = -1;
+            for (int i = 0; i < 6; i++) {
+                tile->neighbor[i] = -1;
+            }
+
+            tileCount++;
+        }
+    }
+
+    return tileCount;
 }
 
 void DrawHexGrid(HexMapTile *tiles, int count, float thickness) {
     for (int i = 0; i < count; i++) {
         HexMapTile tile = tiles[i];
-        DrawHexShapeBordered(
-            tile.pos, tile.size, thickness, tile.color, tile.border
+        PBDrawHexagon(tile.pos, tile.size, thickness, tile.color, tile.border);
+        // DrawTextEx(font, TextFormat("%d", i), tile.pos, 16, 0.0f,
+        // tile.border);
+    }
+}
+
+void DrawNavTiles(HexNavTile *tiles, int count, float thickness) {
+    for (int i = 0; i < count; i++) {
+        HexNavTile tile = tiles[i];
+        PBDrawHexagonLine(
+            tile.pos, tile.size, thickness, (Color){0xff, 0xff, 0xff, 10}
         );
         // DrawTextEx(font, TextFormat("%d", i), tile.pos, 16, 0.0f,
         // tile.border);

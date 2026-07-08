@@ -2,17 +2,18 @@
 #define PB_HEXGRID_H
 
 #include "raylib.h"
+#include <stdbool.h>
 
 #define DEFAULT_HEX_SIZE 20.0f
 
 typedef struct HexVec {
     int q;
     int r;
+    int s;
 } HexVec;
 
 typedef struct HexMapTile {
     HexVec cord;
-    int s;
     int size;
     int colsnSize;
     Vector2 pos;
@@ -20,25 +21,32 @@ typedef struct HexMapTile {
     Color border;
 } HexMapTile;
 
+typedef struct HexNavTile {
+    HexVec cord;
+    int size;
+    Vector2 pos;
+    bool walkable;
+    bool hasFood;
+    int bugs;
+    int neighbor[6];
+} HexNavTile;
+
 #define VecToHexVec(vec)  ((HexVec){.q = vec.x, .r = vec.y})
 #define HexVecToVec(hvec) ((Vector2){.x = hvec.q, .y = hvec.r})
 
-Vector2 HexCordToPx(HexVec cord, float size);
-void DrawHexShape(Vector2 pos, float size, Color color);
-void DrawHexShapeLine(Vector2 pos, float size, float thickness, Color color);
-void DrawHexShapeBordered(
-    Vector2 pos, float size, float thickness, Color bg, Color border
-);
-void FillHexGrid(
+int FillHexGrid(
     Vector2 center,
     HexMapTile *tiles,
-    int *count,
     int gridRadius,
     float hexSize,
     Color bg,
     Color brdr
 );
 
-void DrawHexGrid(HexMapTile *tiles, int count, float thickness);
+int GenerateNavTiles(
+    Vector2 center, HexNavTile *tiles, int gridRadius, float hexSize
+);
 
+void DrawHexGrid(HexMapTile *tiles, int count, float thickness);
+void DrawNavTiles(HexNavTile *tiles, int count, float thickness);
 #endif

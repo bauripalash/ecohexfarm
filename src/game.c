@@ -45,6 +45,7 @@ int main(void) {
     SetTraceLogLevel(LOG_WARNING);
     InitWindow(WIN_SIZE, WIN_SIZE, "raylib game template");
     screen = LoadRenderTexture(SCREEN_SIZE, SCREEN_SIZE);
+    SetTextureFilter(screen.texture, TEXTURE_FILTER_POINT);
 
     InitAudioDevice();
     font = LoadFont("resources/BIOSfontII.ttf");

@@ -17,7 +17,8 @@ HexBug NewGenesisBug(bool primary) {
 HexBug NewHexBug(int color) {
     Color geneticColor = GetColor(RGBtoRGBA(color));
     return (HexBug){
-        .pos = (Vector2){SCREEN_SIZE / 2.0f, SCREEN_SIZE / 2.0f},
+        .id = 0,
+        .tile = 0,
         .size = DEFAULT_BUG_SIZE,
         .gene = (HexGene){
             .red = geneticColor.r,
@@ -26,12 +27,16 @@ HexBug NewHexBug(int color) {
             .hGene = color,
             .hColor = geneticColor
         },
+
     };
 }
 
 void DrawHexBug(HexBug *bug) {
+    /*
     PBDrawHexagon(
         bug->pos, bug->size, DEFAULT_BUG_THICK, bug->gene.hColor,
         bug->gene.hColor
     );
+    */
+    PBDrawHexagonLine(bug->pos, bug->size, DEFAULT_BUG_THICK, bug->gene.hColor);
 }

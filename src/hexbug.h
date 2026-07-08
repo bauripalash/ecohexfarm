@@ -4,8 +4,8 @@
 #include "raylib.h"
 #include <stdbool.h>
 
-#define DEFAULT_BUG_SIZE  8
-#define DEFAULT_BUG_THICK 3
+#define DEFAULT_BUG_SIZE  6
+#define DEFAULT_BUG_THICK 2
 
 #define BUG_MAX_HEALTH    100
 #define BUG_MIN_HEALTH    1
@@ -33,6 +33,7 @@ typedef struct HexGene {
 
 typedef struct HexBug {
     int id;
+    int tile;
     int size;
     Vector2 pos;
     HexGene gene;
