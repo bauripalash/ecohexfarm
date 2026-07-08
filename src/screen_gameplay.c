@@ -1,10 +1,10 @@
 #include "colors.h"
 #include "config.h"
-#include "gameplay.h"
 #include "hexbug.h"
 #include "hexgrid.h"
 #include "raylib.h"
 #include "screens.h"
+#include "gameplay.h"
 #include <stdbool.h>
 
 #define BG_COLOR        PbColorVGray
