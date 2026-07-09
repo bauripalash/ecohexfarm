@@ -50,7 +50,9 @@ int main(void) {
     SetTextureFilter(screen.texture, TEXTURE_FILTER_POINT);
 
     InitAudioDevice();
-    font = LoadFont("resources/BIOSfontII.ttf");
+    // font = LoadFont("resources/BIOSfontII.ttf");
+    font = LoadFontEx("resources/font/PressStart2P.ttf", 32, NULL, 0);
+    SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
 
     SetMusicVolume(music, 1.0f);
     PlayMusicStream(music);
@@ -242,7 +244,10 @@ static void UpdateDrawFrame(void) {
             screen.texture, (Rectangle){0, 0, SCREEN_SIZE, -SCREEN_SIZE},
             (Rectangle){0, 0, WIN_SIZE, WIN_SIZE}, (Vector2){0, 0}, 0.0f, WHITE
         );
-        // DrawFPS(10, 10);
+
+        // DrawTextEx(font, TextFormat("Bugs: %d", HexBugCount), (Vector2){5,
+        // 5}, 8, 0, PbColorVWhite);
+        DrawFPS(10, 10);
     }
     EndDrawing();
     //----------------------------------------------------------------------------------

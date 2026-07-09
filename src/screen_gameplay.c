@@ -29,15 +29,12 @@ int HexBugCount = 0;
 
 static void drawBackground(void) {
     DrawHexGrid(MapTiles, MapTileCount, 1);
-    DrawNavTiles(NavTiles, NavTileCount, 1);
+    // DrawNavTiles(NavTiles, NavTileCount, 1);
 }
 
 static void initFirstBugs(void) {
-    HexBugs[0] = NewGenesisBug(true, 0);
-
-    HexBugs[1] = NewGenesisBug(false, 1);
-
-    HexBugCount = 2;
+    HexBugs[HexBugCount++] = NewGenesisBug(true, 0);
+    HexBugs[HexBugCount++] = NewGenesisBug(false, 1);
 }
 
 // Gameplay Screen Initialization logic

@@ -33,7 +33,7 @@ HexBug NewGenesisBug(bool primary, int tile) {
 
 HexBug NewHexBug(int color) {
     Color geneticColor = GetColor(RGBtoRGBA(color));
-    return (HexBug){
+    HexBug bug = {
         .target = -1,
         .id = HexBugCount,
         .pos = (Vector2){0, 0},
@@ -50,6 +50,8 @@ HexBug NewHexBug(int color) {
         },
 
     };
+
+    return bug;
 }
 
 void BugWalkToTarget(HexBug *bug) {
@@ -96,17 +98,31 @@ void DrawHexBug(HexBug *bug) {
         bug->gene.hColor
     );
     */
-    PBDrawHexagonLine(bug->pos, bug->size, DEFAULT_BUG_THICK, bug->gene.hColor);
+    PBDrawHexagon(
+        bug->pos, bug->size, 1, bug->gene.hColor, (Color){0xff, 0xff, 0xff, 50}
+    );
+
+    float eyeSize = bug->size * 0.18f;
+    float eyeOffsetX = bug->size * 0.28f;
+    Color eyeColor = GetOppositeColor(bug->gene.hColor);
+    Vector2 leftEye = {bug->pos.x - eyeOffsetX, bug->pos.y};
+    Vector2 rightEye = {bug->pos.x + eyeOffsetX, bug->pos.y};
+
+    // PBDrawHexagonFilled(leftEye, eyeSize, eyeColor);
+    // PBDrawHexagonFilled(rightEye, eyeSize, eyeColor);
+    DrawCircleV(leftEye, eyeSize, eyeColor);
+    DrawCircleV(rightEye, eyeSize, eyeColor);
+    float range = Remap(
+        bug->gene.blue, 0, BUG_MAX_RANGE, BUG_MIN_RANGE_VALUE,
+        BUG_MAX_RANGE_VALUE
+    );
+    DrawCircleLines(bug->pos.x, bug->pos.y, range, BLUE);
+
     int target = bug->target;
     if (target != -1) {
         HexNavTile *targetTile = &NavTiles[target];
-        PBDrawLine(bug->pos, targetTile->pos, 1, GRAY);
-        // DrawText(
-        //     TextFormat("%d->%d->%d", bug->tile, bug->nextTile, bug->target),
-        //     bug->pos.x, bug->pos.y, 16, WHITE
-        //);
-
-        // DrawCircle(targetTile->pos.x, targetTile->pos.y, 5,
-        // bug->gene.hColor);
+        Color tGray = GRAY;
+        tGray.a = 10;
+        PBDrawLine(bug->pos, targetTile->pos, 1, tGray);
     }
 }

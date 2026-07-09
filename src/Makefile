@@ -34,7 +34,10 @@ PROJECT_VERSION       ?= 1.0
 PROJECT_BUILD_PATH    ?= .
 PROJECT_SOURCE_FILES  ?= \
     game.c \
+	hexbug.c \
+	draw.c \
 	hexgrid.c \
+	utils.c \
     screen_title.c \
     screen_options.c \
     screen_gameplay.c \
