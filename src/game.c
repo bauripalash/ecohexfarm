@@ -1,6 +1,7 @@
 #include "config.h"
 #include "raylib.h"
 #include "screens.h"
+#include <time.h>
 
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h> // Emscripten library
@@ -44,6 +45,7 @@ static void UpdateDrawFrame(void);
 int main(void) {
     SetTraceLogLevel(LOG_WARNING);
     InitWindow(WIN_SIZE, WIN_SIZE, "raylib game template");
+    SetRandomSeed(time(NULL));
     screen = LoadRenderTexture(SCREEN_SIZE, SCREEN_SIZE);
     SetTextureFilter(screen.texture, TEXTURE_FILTER_POINT);
 

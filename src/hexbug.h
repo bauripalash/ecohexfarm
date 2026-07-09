@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #define DEFAULT_BUG_SIZE  6
-#define DEFAULT_BUG_THICK 2
+#define DEFAULT_BUG_THICK 1
 
 #define BUG_MAX_HEALTH    100
 #define BUG_MIN_HEALTH    1
@@ -34,13 +34,16 @@ typedef struct HexGene {
 typedef struct HexBug {
     int id;
     int tile;
+    int nextTile;
+    int target;
     int size;
     Vector2 pos;
     HexGene gene;
+    bool moving;
 } HexBug;
 
-HexBug NewGenesisBug(bool primary);
+HexBug NewGenesisBug(bool primary, int tile);
 HexBug NewHexBug(int color);
 void DrawHexBug(HexBug *bug);
-
+void BugWalkToTarget(HexBug *bug);
 #endif

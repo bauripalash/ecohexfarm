@@ -7,6 +7,12 @@ typedef struct HexVec HexVec;
 #define ClampInt(val, min, max)                                                \
     ((val) < (min) ? (min) : ((val) > (max) ? (max) : (val)))
 
+static inline int Max3(int a, int b, int c) {
+    int r = a;
+    if (b > r) r = b;
+    if (c > r) r = c;
+    return r;
+}
 float CircleRadFromHexRad(float rad);
 unsigned int ToHex(unsigned int r, unsigned int g, unsigned b);
 unsigned int RGBtoRGBA(unsigned int rgb);

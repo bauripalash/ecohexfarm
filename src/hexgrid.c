@@ -1,9 +1,14 @@
+// clang-format off
 #include "hexgrid.h"
+#include "hexbug.h"
 #include "draw.h"
 #include "raylib.h"
 #include "utils.h"
+#include "gameplay.h"
+#include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
+// clang-format on
 
 int FillHexGrid(
     Vector2 center,
@@ -60,6 +65,43 @@ int GenerateNavTiles(
     }
 
     return tileCount;
+}
+
+void BuildNavNeighbors(HexNavTile *tiles, int count) {
+    for (int i = 0; i < count; i++) {
+        for (int d = 0; d < 6; d++) {
+            HexNavTile *tile = &tiles[i];
+            HexVec target = {
+                tile->cord.q + HexDirs[d].q, tile->cord.r + HexDirs[d].r
+            };
+
+            for (int j = 0; j < count; j++) {
+                if (tiles[j].cord.q == target.q &&
+                    tiles[j].cord.r == target.r) {
+                    tile->neighbor[d] = j;
+                }
+            }
+        }
+    }
+}
+
+int GetBestNeighbor(int tile, int target) {
+    int best = tile;
+    int bestDist = INT_MAX;
+    for (int i = 0; i < 6; i++) {
+        int tn = NavTiles[tile].neighbor[i];
+        if (tn == -1) {
+            continue;
+        }
+
+        int dist = HexVecDistance(NavTiles[tn].cord, NavTiles[target].cord);
+
+        if (dist < bestDist) {
+            best = tn;
+            bestDist = dist;
+        }
+    }
+    return best;
 }
 
 void DrawHexGrid(HexMapTile *tiles, int count, float thickness) {

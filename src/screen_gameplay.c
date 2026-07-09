@@ -1,11 +1,14 @@
+// clang-format off
 #include "colors.h"
 #include "config.h"
 #include "hexbug.h"
 #include "hexgrid.h"
 #include "raylib.h"
 #include "screens.h"
+
 #include "gameplay.h"
 #include <stdbool.h>
+// clang-format on
 
 #define BG_COLOR        PbColorVGray
 #define TILE_BG_COLOR   PbColorVGray
@@ -30,11 +33,9 @@ static void drawBackground(void) {
 }
 
 static void initFirstBugs(void) {
-    HexBugs[0] = NewGenesisBug(true);
-    HexBugs[0].pos = MapTiles[0].pos;
+    HexBugs[0] = NewGenesisBug(true, 0);
 
-    HexBugs[1] = NewGenesisBug(false);
-    HexBugs[1].pos = MapTiles[MapTileCount - 1].pos;
+    HexBugs[1] = NewGenesisBug(false, 1);
 
     HexBugCount = 2;
 }
@@ -51,6 +52,7 @@ void InitGameplayScreen(void) {
         (Vector2){SCREEN_SIZE / 2.0f, SCREEN_SIZE / 2.0f}, NavTiles,
         NAV_MAP_RADIUS, NAV_TILE_SIZE
     );
+    BuildNavNeighbors(NavTiles, NavTileCount);
     initFirstBugs();
 }
 
@@ -63,6 +65,9 @@ void UpdateGameplayScreen(void) {
         PlaySound(fxCoin);
     }
     */
+    for (int i = 0; i < HexBugCount; i++) {
+        BugWalkToTarget(&HexBugs[i]);
+    }
     framesCounter++;
 }
 

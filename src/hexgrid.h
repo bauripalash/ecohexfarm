@@ -2,7 +2,9 @@
 #define PB_HEXGRID_H
 
 #include "raylib.h"
+#include "utils.h"
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define DEFAULT_HEX_SIZE 20.0f
 
@@ -11,6 +13,13 @@ typedef struct HexVec {
     int r;
     int s;
 } HexVec;
+
+static const HexVec HexDirs[6] = {{1, 0, 0},  {1, -1, 0}, {0, -1, 0},
+                                  {-1, 0, 0}, {-1, 1, 0}, {0, 1, 0}};
+
+static inline int HexVecDistance(HexVec a, HexVec b) {
+    return Max3(abs(a.q - b.q), abs(a.r - b.r), abs(a.s - b.s));
+}
 
 typedef struct HexMapTile {
     HexVec cord;
@@ -47,6 +56,8 @@ int GenerateNavTiles(
     Vector2 center, HexNavTile *tiles, int gridRadius, float hexSize
 );
 
+int GetBestNeighbor(int tile, int target);
+void BuildNavNeighbors(HexNavTile *tiles, int count);
 void DrawHexGrid(HexMapTile *tiles, int count, float thickness);
 void DrawNavTiles(HexNavTile *tiles, int count, float thickness);
 #endif
