@@ -1,24 +1,25 @@
-// clang-format off
-
-#include "hexbug.h"
 #include "config.h"
 #include "draw.h"
 #include "external/raygui.h"
-#include "hexgrid.h"
+#include "external/stb_ds.h"
+#include "gameplay.h"
 #include "raylib.h"
 #include "raymath.h"
 #include "screens.h"
 #include "utils.h"
-#include "gameplay.h"
 #include <math.h>
 #include <stdbool.h>
-
-// clang-format on
 
 static void setRandomBugTarget(HexBug *bug) {
     do {
         bug->target = GetRandomValue(0, NavTileCount - 1);
     } while (bug->target == bug->tile);
+}
+
+static void refreshBugIndexes(void){
+    for (int i = 0; i < HexBugCount; i++) {
+        HexBugs[i].listIndex = i;
+    }
 }
 
 static float getHealth(const HexBug *bug) {
@@ -45,6 +46,13 @@ static float getRange(const HexBug *bug) {
     return result;
 }
 
+static void syncGeneColor(HexBug *bug) {
+    bug->gene.hColor.r = bug->gene.red;
+    bug->gene.hColor.g = bug->gene.green;
+    bug->gene.hColor.b = bug->gene.blue;
+    bug->gene.hGene = ColorToInt(bug->gene.hColor);
+}
+
 HexBug NewGenesisBug(bool primary, int tile) {
     HexBug bug =
         // primary
@@ -61,6 +69,7 @@ HexBug NewHexBug(int color) {
     Color geneticColor = GetColor(RGBtoRGBA(color));
     HexBug bug = {
         .target = -1,
+        .listIndex = HexBugCount,
         .id = HexBugID,
         .pos = (Vector2){0, 0},
         .tile = 0,
@@ -121,7 +130,7 @@ static void updateBugPos(HexBug *bug, Vector2 newPos) {
     }
 }
 
-void BugWalkToTarget(HexBug *bug) {
+void BugWalkToTarget(HexBug *bug, int fc) {
 
     if (bug->target == -1) {
         setRandomBugTarget(bug);
@@ -159,6 +168,15 @@ void BugWalkToTarget(HexBug *bug) {
         bug->nextTile = -1;
         bug->moving = false;
     }
+    if (bug->gene.red <= 0) {
+        arrdel(HexBugs, bug->listIndex);
+        HexBugCount--;
+        refreshBugIndexes();
+    }
+    bug->gene.red += (fc % 60 == 0) ? -1 : 0;
+    bug->gene.red =
+        ClampInt(bug->gene.red, BUG_MIN_GENE_LIMIT, BUG_MAX_GENE_LIMIT);
+    syncGeneColor(bug);
 }
 
 void DrawHexBug(HexBug *bug) {
@@ -198,6 +216,8 @@ void DrawHexBug(HexBug *bug) {
             RED
         );
     }
+
+        DrawTextEx(font, TextFormat("%d", bug->gene.red), (Vector2){bug->pos.x - 8, bug->pos.y - DEFAULT_BUG_SIZE - 16}, 8, 1 , RED);
 
     // PBDrawHexagon(bug->pos, bug->size, 1, BLANK, PINK);
 }

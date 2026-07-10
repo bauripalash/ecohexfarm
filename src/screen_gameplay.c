@@ -1,18 +1,17 @@
-// clang-format off
 #include "colors.h"
 #include "config.h"
-#include "hexbug.h"
-#include "hexgrid.h"
+#include "gameplay.h"
 #include "raylib.h"
 #include "screens.h"
-#include "gameplay.h"
 #include "ui.h"
 
-#include <stdbool.h>
-#include <string.h>
+#define STB_DS_IMPLEMENTATION
+#include "external/stb_ds.h"
+
 #define RAYGUI_IMPLEMENTATION
 #include "external/raygui.h"
-// clang-format on
+
+#include <stdbool.h>
 
 #define BG_COLOR        PbColorVGray
 #define TILE_BG_COLOR   PbColorVGray
@@ -28,9 +27,12 @@ int TerrainTileCount = 0;
 HexNavTile NavTiles[NAV_MAX_TILES];
 int NavTileCount = 0;
 
-HexBug HexBugs[MAX_BUGS];
+HexBug *HexBugs;
 int HexBugID = 0;
 int HexBugCount = 0;
+
+HexFood HexFoods[MAX_FOODS];
+int HexFoodCount = 0;
 
 static void drawBackground(void) {
     DrawTerrainTiles(TerrainTiles, TerrainTileCount, 1);
@@ -40,9 +42,20 @@ static void drawBackground(void) {
 }
 
 static void initFirstBugs(void) {
-    HexBugs[HexBugCount++] = NewGenesisBug(true, 0);
-    for (int i = 1; i < INIT_BUGS; i++) {
-        HexBugs[HexBugCount++] = NewGenesisBug(false, i);
+    for (int i = 0; i < INIT_BUGS; i++) {
+        arrput(HexBugs, NewGenesisBug(i == 0, i));
+        HexBugCount++;
+    }
+}
+
+static int getRandomNavTile(void) {
+    int result = GetRandomValue(0, NavTileCount - 1);
+    return result;
+}
+
+static void initFirstFoods(void) {
+    for (int i = 0; i < INIT_FOODS; i++) {
+        HexFoods[HexFoodCount++] = NewHexFood(NavTiles[getRandomNavTile()].pos);
     }
 }
 
@@ -51,15 +64,16 @@ void InitGameplayScreen(void) {
     framesCounter = 0;
     finishScreen = 0;
     TerrainTileCount = GenerateTerrainTiles(
-        (Vector2){SCREEN_SIZE / 2.0f, SCREEN_SIZE / 2.0f}, TerrainTiles,
+        (Vector2){(float)SCREEN_CENTER, (float)SCREEN_CENTER}, TerrainTiles,
         TERRAIN_MAP_RADIUS, TERRAIN_TILE_SIZE, TILE_BG_COLOR, TILE_BRDR_COLOR
     );
     NavTileCount = GenerateNavTiles(
-        (Vector2){SCREEN_SIZE / 2.0f, SCREEN_SIZE / 2.0f}, NavTiles,
+        (Vector2){(float)SCREEN_CENTER, (float)SCREEN_CENTER}, NavTiles,
         NAV_MAP_RADIUS, NAV_TILE_SIZE
     );
     BuildNavNeighbors(NavTiles, NavTileCount);
     initFirstBugs();
+    initFirstFoods();
 }
 
 // Gameplay Screen Update logic
@@ -72,7 +86,7 @@ void UpdateGameplayScreen(void) {
     }
     */
     for (int i = 0; i < HexBugCount; i++) {
-        BugWalkToTarget(&HexBugs[i]);
+        BugWalkToTarget(&HexBugs[i], framesCounter);
     }
     framesCounter++;
 }
@@ -86,6 +100,12 @@ void DrawGameplayScreen(void) {
         DrawHexBug(&HexBugs[i]);
     }
 
+    DrawCircleLinesV(
+        (Vector2){(float)SCREEN_CENTER, (float)SCREEN_CENTER}, GARDEN_RADIUS,
+        WHITE
+    );
+
+    DrawHexFoodList();
     Rectangle buyBtnRect = {100, 5, 50, 50};
     if (PbIconButton(buyBtnRect, ICON_COIN)) {
         TraceLog(LOG_WARNING, "Buy");
@@ -93,7 +113,9 @@ void DrawGameplayScreen(void) {
 }
 
 // Gameplay Screen Unload logic
-void UnloadGameplayScreen(void) {}
+void UnloadGameplayScreen(void) {
+    arrfree(HexBugs);
+}
 
 // Gameplay Screen should finish?
 int FinishGameplayScreen(void) { return finishScreen; }

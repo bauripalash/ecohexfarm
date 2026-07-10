@@ -1,14 +1,10 @@
-// clang-format off
-#include "hexgrid.h"
-#include "hexbug.h"
 #include "draw.h"
+#include "gameplay.h"
 #include "raylib.h"
 #include "utils.h"
-#include "gameplay.h"
 #include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
-// clang-format on
 
 int GenerateTerrainTiles(
     Vector2 center,
