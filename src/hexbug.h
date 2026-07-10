@@ -20,8 +20,8 @@
 #define BUG_MAX_RANGE      DEFAULT_BUG_SIZE * 10
 
 #define BUG_BASE_SPEED     127
-#define BUG_BASE_HEALTH    127
-#define BUG_BASE_RANGE     DEFAULT_BUG_SIZE * 2
+#define BUG_BASE_HEALTH    100
+#define BUG_BASE_RANGE     DEFAULT_BUG_SIZE * 3
 
 #define BUG_TXT_SCALE      1.2f
 

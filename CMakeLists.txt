@@ -6,6 +6,10 @@ include(FetchContent)
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+#set(CMAKE_C_EXTENSIONS ON)
+
 # Dependencies
 set(RAYLIB_VERSION 6.0)
 set(RAYLIB_COMMIT caadb48e259028233515777a3e6402040c497309)
@@ -50,7 +54,11 @@ target_link_libraries(${PROJECT_NAME} raylib)
 if ("${PLATFORM}" STREQUAL "Web")
     # Tell Emscripten to build an example.html file.
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
-    target_link_options(${PROJECT_NAME} PUBLIC -sUSE_GLFW=3 PUBLIC --preload-file resources)
+    target_link_options(${PROJECT_NAME} PUBLIC
+		-sUSE_GLFW=3
+		--preload-file resources
+		--shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html
+		)
 endif()
 
 # Checks if OSX and links appropriate frameworks (Only required on MacOS)

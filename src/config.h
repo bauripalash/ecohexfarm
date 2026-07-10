@@ -7,7 +7,7 @@
 
 // Debug Flags
 #ifndef DEBUG_BUG_RANGE
-#define DEBUG_BUG_RANGE 0
+#define DEBUG_BUG_RANGE 1
 #endif
 
 #ifndef DEBUG_BUG_HEALTH
