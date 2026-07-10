@@ -6,8 +6,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define DEFAULT_HEX_SIZE 20.0f
-
 typedef struct HexVec {
     int q;
     int r;
@@ -21,14 +19,14 @@ static inline int HexVecDistance(HexVec a, HexVec b) {
     return Max3(abs(a.q - b.q), abs(a.r - b.r), abs(a.s - b.s));
 }
 
-typedef struct HexMapTile {
+typedef struct HexTerrainTile {
     HexVec cord;
     int size;
     int colsnSize;
     Vector2 pos;
     Color color;
     Color border;
-} HexMapTile;
+} HexTerrainTile;
 
 typedef struct HexNavTile {
     HexVec cord;
@@ -43,9 +41,9 @@ typedef struct HexNavTile {
 #define VecToHexVec(vec)  ((HexVec){.q = vec.x, .r = vec.y})
 #define HexVecToVec(hvec) ((Vector2){.x = hvec.q, .y = hvec.r})
 
-int FillHexGrid(
+int GenerateTerrainTiles(
     Vector2 center,
-    HexMapTile *tiles,
+    HexTerrainTile *tiles,
     int gridRadius,
     float hexSize,
     Color bg,
@@ -58,6 +56,6 @@ int GenerateNavTiles(
 
 int GetBestNeighbor(int tile, int target);
 void BuildNavNeighbors(HexNavTile *tiles, int count);
-void DrawHexGrid(HexMapTile *tiles, int count, float thickness);
+void DrawTerrainTiles(HexTerrainTile *tiles, int count, float thickness);
 void DrawNavTiles(HexNavTile *tiles, int count, float thickness);
 #endif

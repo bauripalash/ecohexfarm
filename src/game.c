@@ -1,6 +1,7 @@
 #include "config.h"
 #include "raylib.h"
 #include "screens.h"
+
 #include <time.h>
 
 #if defined(PLATFORM_WEB)
@@ -17,6 +18,11 @@ GameScreen currentScreen = TITLE;
 Font font = {0};
 Music music = {0};
 Sound fxCoin = {0};
+Image bugBody = {0};
+Texture2D bugBodyTxt = {0};
+Image bugFace = {0};
+Texture2D bugFaceTxt = {0};
+Vector2 bugTxtOrigin = {0};
 
 static RenderTexture2D screen = {0};
 
@@ -42,23 +48,50 @@ static void DrawTransition(void);
 // Update and draw one frame
 static void UpdateDrawFrame(void);
 
-int main(void) {
-    SetTraceLogLevel(LOG_WARNING);
-    InitWindow(WIN_SIZE, WIN_SIZE, "raylib game template");
-    SetRandomSeed(time(NULL));
+static void loadResources(void) {
+
     screen = LoadRenderTexture(SCREEN_SIZE, SCREEN_SIZE);
     SetTextureFilter(screen.texture, TEXTURE_FILTER_POINT);
 
-    InitAudioDevice();
-    // font = LoadFont("resources/BIOSfontII.ttf");
     font = LoadFontEx("resources/font/PressStart2P.ttf", 32, NULL, 0);
     SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
 
-    SetMusicVolume(music, 1.0f);
-    PlayMusicStream(music);
+    bugFace = LoadImage("resources/artwork/bugeyes.png");
+    bugFaceTxt = LoadTextureFromImage(bugFace);
+    SetTextureFilter(bugFaceTxt, TEXTURE_FILTER_POINT);
 
-    // currentScreen = TITLE;
-    // InitTitleScreen();
+    bugBody = LoadImage("resources/artwork/bugbody.png");
+    Image bugOutline = LoadImage("resources/artwork/bugoutline.png");
+
+    ImageDraw(
+        &bugBody, bugOutline,
+        (Rectangle){0, 0, (float)bugOutline.width, (float)bugOutline.height},
+        (Rectangle){0, 0, (float)bugBody.width, (float)bugBody.height}, WHITE
+    );
+
+    bugBodyTxt = LoadTextureFromImage(bugBody);
+    SetTextureFilter(bugBodyTxt, TEXTURE_FILTER_POINT);
+    UnloadImage(bugOutline);
+}
+
+static void unloadResources(void) {
+    UnloadFont(font);
+    UnloadImage(bugFace);
+    UnloadImage(bugBody);
+    UnloadTexture(bugFaceTxt);
+    UnloadTexture(bugBodyTxt);
+    UnloadRenderTexture(screen);
+}
+
+int main(void) {
+    SetTraceLogLevel(LOG_WARNING);
+    InitWindow(WIN_SIZE, WIN_SIZE, GAME_NAME);
+    SetRandomSeed(time(NULL));
+
+    InitAudioDevice();
+    // SetMusicVolume(music, 1.0f);
+    // PlayMusicStream(music);
+    loadResources();
 
     currentScreen = GAMEPLAY;
     InitGameplayScreen();
@@ -81,11 +114,8 @@ int main(void) {
         default: break;
     }
 
-    UnloadFont(font);
-    UnloadMusicStream(music);
-    UnloadSound(fxCoin);
-
     CloseAudioDevice();
+    unloadResources();
 
     CloseWindow();
     return 0;

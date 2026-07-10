@@ -8,14 +8,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Dependencies
 set(RAYLIB_VERSION 6.0)
+set(RAYLIB_COMMIT caadb48e259028233515777a3e6402040c497309)
 
 FetchContent_Declare(
     raylib
     DOWNLOAD_EXTRACT_TIMESTAMP OFF
-    URL https://github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz
-    FIND_PACKAGE_ARGS
+    URL "https://github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz"
+	OVERRIDE_FIND_PACKAGE
 )
 
+#FIND_PACKAGE_ARGS
 FetchContent_MakeAvailable(raylib)
 
 # Our Project
@@ -41,7 +43,7 @@ else()
     #DEPENDS ${PROJECT_NAME}
 endif()
 
-#set(raylib_VERBOSE 1)
+set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 
 # Web Configurations

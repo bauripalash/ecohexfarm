@@ -35,6 +35,7 @@ PROJECT_BUILD_PATH    ?= .
 PROJECT_SOURCE_FILES  ?= \
     game.c \
 	hexbug.c \
+	ui.c \
 	draw.c \
 	hexgrid.c \
 	utils.c \

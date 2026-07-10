@@ -5,9 +5,13 @@
 #include "hexgrid.h"
 #include "raylib.h"
 #include "screens.h"
-
 #include "gameplay.h"
+#include "ui.h"
+
 #include <stdbool.h>
+#include <string.h>
+#define RAYGUI_IMPLEMENTATION
+#include "external/raygui.h"
 // clang-format on
 
 #define BG_COLOR        PbColorVGray
@@ -18,32 +22,37 @@ static int framesCounter = 0;
 static int finishScreen = 0;
 static Color navTileBorder = {255, 100, 100, 20};
 
-HexMapTile MapTiles[MAX_TILES];
-int MapTileCount = 0;
+HexTerrainTile TerrainTiles[TERRAIN_MAX_TILES];
+int TerrainTileCount = 0;
 
-HexNavTile NavTiles[MAX_NAV_TILES];
+HexNavTile NavTiles[NAV_MAX_TILES];
 int NavTileCount = 0;
 
 HexBug HexBugs[MAX_BUGS];
+int HexBugID = 0;
 int HexBugCount = 0;
 
 static void drawBackground(void) {
-    DrawHexGrid(MapTiles, MapTileCount, 1);
-    // DrawNavTiles(NavTiles, NavTileCount, 1);
+    DrawTerrainTiles(TerrainTiles, TerrainTileCount, 1);
+    if (DEBUG_NAV_TILES) {
+        DrawNavTiles(NavTiles, NavTileCount, 1);
+    }
 }
 
 static void initFirstBugs(void) {
     HexBugs[HexBugCount++] = NewGenesisBug(true, 0);
-    HexBugs[HexBugCount++] = NewGenesisBug(false, 1);
+    for (int i = 1; i < INIT_BUGS; i++) {
+        HexBugs[HexBugCount++] = NewGenesisBug(false, i);
+    }
 }
 
 // Gameplay Screen Initialization logic
 void InitGameplayScreen(void) {
     framesCounter = 0;
     finishScreen = 0;
-    MapTileCount = FillHexGrid(
-        (Vector2){SCREEN_SIZE / 2.0f, SCREEN_SIZE / 2.0f}, MapTiles, MAP_RADIUS,
-        DEFAULT_HEX_SIZE, TILE_BG_COLOR, TILE_BRDR_COLOR
+    TerrainTileCount = GenerateTerrainTiles(
+        (Vector2){SCREEN_SIZE / 2.0f, SCREEN_SIZE / 2.0f}, TerrainTiles,
+        TERRAIN_MAP_RADIUS, TERRAIN_TILE_SIZE, TILE_BG_COLOR, TILE_BRDR_COLOR
     );
     NavTileCount = GenerateNavTiles(
         (Vector2){SCREEN_SIZE / 2.0f, SCREEN_SIZE / 2.0f}, NavTiles,
@@ -75,6 +84,11 @@ void DrawGameplayScreen(void) {
 
     for (int i = 0; i < HexBugCount; i++) {
         DrawHexBug(&HexBugs[i]);
+    }
+
+    Rectangle buyBtnRect = {100, 5, 50, 50};
+    if (PbIconButton(buyBtnRect, ICON_COIN)) {
+        TraceLog(LOG_WARNING, "Buy");
     }
 }
 

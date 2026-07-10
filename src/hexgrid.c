@@ -10,9 +10,9 @@
 #include <stdlib.h>
 // clang-format on
 
-int FillHexGrid(
+int GenerateTerrainTiles(
     Vector2 center,
-    HexMapTile *tiles,
+    HexTerrainTile *tiles,
     int gridRadius,
     float hexSize,
     Color bg,
@@ -23,7 +23,7 @@ int FillHexGrid(
         for (int r = -gridRadius; r <= gridRadius; r++) {
             int s = -q - r;
             if (abs(s) <= gridRadius) {
-                HexMapTile *tile = &tiles[hexIdx];
+                HexTerrainTile *tile = &tiles[hexIdx];
                 tile->cord = (HexVec){q, r, s};
                 Vector2 pxl = HexCordToPx(tile->cord, hexSize);
                 tile->size = hexSize;
@@ -104,9 +104,9 @@ int GetBestNeighbor(int tile, int target) {
     return best;
 }
 
-void DrawHexGrid(HexMapTile *tiles, int count, float thickness) {
+void DrawTerrainTiles(HexTerrainTile *tiles, int count, float thickness) {
     for (int i = 0; i < count; i++) {
-        HexMapTile tile = tiles[i];
+        HexTerrainTile tile = tiles[i];
         PBDrawHexagon(tile.pos, tile.size, thickness, tile.color, tile.border);
         // DrawTextEx(font, TextFormat("%d", i), tile.pos, 16, 0.0f,
         // tile.border);
