@@ -283,7 +283,7 @@ static void UpdateDrawFrame(void) {
 
         // DrawTextEx(font, TextFormat("Bugs: %d", HexBugCount), (Vector2){5,
         // 5}, 8, 0, PbColorVWhite);
-        DrawFPS(10, 10);
+        // DrawFPS(10, 10);
     }
     EndDrawing();
     //----------------------------------------------------------------------------------

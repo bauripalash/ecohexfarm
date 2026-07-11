@@ -94,10 +94,10 @@ void DrawHexFoodList(void) {
         HexFood *food = &HexFoods[i];
         Color foodColor = getFoodColor(food);
         DrawPoly(food->pos, 6, DEFAULT_BUG_SIZE * 0.5f, 30.0f, foodColor);
-        DrawCircleLinesV(food->pos, FOOD_RADIUS, foodColor);
-        DrawTextEx(
-            font, TextFormat("#%d : >[%d]", food->index, food->claimedBy),
-            food->pos, 8, 0, WHITE
-        );
+        // DrawCircleLinesV(food->pos, FOOD_RADIUS, foodColor);
+        // DrawTextEx(
+        //     font, TextFormat("#%d : >[%d]", food->index, food->claimedBy),
+        //     food->pos, 8, 0, WHITE
+        //);
     }
 }

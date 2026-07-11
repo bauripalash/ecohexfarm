@@ -363,15 +363,22 @@ void DrawHexBug(HexBug *bug) {
     }
 
     if (DEBUG_BUG_HEALTH) {
-        GuiDrawIcon(
-            ICON_HEART, bug->pos.x - 8, bug->pos.y - DEFAULT_BUG_SIZE - 16, 1,
+        DrawTextEx(
+            font, TextFormat("%d", bug->gene.red),
+            (Vector2){bug->pos.x - 8, bug->pos.y - DEFAULT_BUG_SIZE - 16}, 8, 1,
             RED
         );
     }
 
-    DrawTextEx(
-        font, TextFormat("%d", bug->gene.red),
-        (Vector2){bug->pos.x - 8, bug->pos.y - DEFAULT_BUG_SIZE - 16}, 8, 1, RED
+    int icon = ICON_NONE;
+    if (bug->dragging) {
+        icon = ICON_HELP;
+    } else if (bug->isPenned) {
+        icon = ICON_STAR;
+    }
+    GuiDrawIcon(
+        icon, bug->pos.x - 8, bug->pos.y - DEFAULT_BUG_SIZE - 16, 1,
+        bug->gene.hColor
     );
 
     // PBDrawHexagon(bug->pos, bug->size, 1, BLANK, PINK);

@@ -36,6 +36,8 @@ typedef struct HexVec HexVec;
 #define SELLING_PEN_RADIUS    70
 #define SELLING_PEN_MARGIN    30
 
+#define INIT_MONEY            10
+
 // -----------------------------------------------------------------------------
 //                              HEX_BUG
 // -----------------------------------------------------------------------------
@@ -163,6 +165,8 @@ extern int HexFoodID;
 
 extern Vector2 SellingPenPosition;
 extern int DraggingBugID;
+
+extern int Money;
 
 // -----------------------------------------------------------------------------
 //                              SELLING_PEN

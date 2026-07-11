@@ -41,6 +41,8 @@ Vector2 SellingPenPosition = {0, 0};
 
 int DraggingBugID = -1;
 
+int Money = INIT_MONEY;
+
 static void drawBackground(void) {
     DrawTerrainTiles(TerrainTiles, TerrainTileCount, 1);
     if (DEBUG_NAV_TILES) {
@@ -89,6 +91,8 @@ void InitGameplayScreen(void) {
     };
 }
 
+static bool showBuyMenu = true;
+
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void) {
 
@@ -98,14 +102,132 @@ void UpdateGameplayScreen(void) {
         PlaySound(fxCoin);
     }
     */
-    UpdateBugDragging();
-    for (int i = 0; i < HexBugCount; i++) {
-        BugWalkToTarget(&HexBugs[i], framesCounter);
+    if (!showBuyMenu) {
+        UpdateBugDragging();
+        for (int i = 0; i < HexBugCount; i++) {
+            BugWalkToTarget(&HexBugs[i], framesCounter);
+        }
+        if (framesCounter % 60 == 0) {
+            SpawnRandomFoodAtRandom();
+        }
     }
-    if (framesCounter % 60 == 0) {
-        SpawnRandomFoodAtRandom();
-    }
+
     framesCounter++;
+}
+
+void DrawHUD(void) {
+    int ogText = GuiGetStyle(DEFAULT, TEXT_SIZE);
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 16);
+    GuiLabel(
+        (Rectangle){8, 8, 200, 16},
+        GuiIconText(ICON_COIN, TextFormat("%d", Money))
+    );
+
+    Rectangle buyBtnRect = {100, 5, 50, 50};
+    if (PbIconButton(buyBtnRect, ICON_COIN)) {
+        showBuyMenu = true;
+    }
+
+    if (showBuyMenu) {
+        DrawRectangle(0, 0, SCREEN_SIZE, SCREEN_SIZE, BG_COLOR);
+        if (IsKeyPressed(KEY_ENTER)) {
+            showBuyMenu = false;
+        }
+
+        const char *textLabel = TextFormat("<Items Shop>");
+        int textWidth = GuiGetTextWidth(textLabel);
+
+        Vector2 screenCenter =
+            (Vector2){SCREEN_SIZE / 2.0f, SCREEN_SIZE / 2.0f};
+        Vector2 textPos = (Vector2){screenCenter.x - textWidth / 2.0f, 30};
+        DrawTextEx(font, textLabel, textPos, 16, 0, PbColorVWhite);
+
+        textLabel = TextFormat("Money: %d coins", Money);
+        textWidth = GuiGetTextWidth(textLabel);
+        textPos.x = screenCenter.x - textWidth / 2.0f;
+        textPos.y += 20;
+
+        DrawTextEx(font, textLabel, textPos, 16, 0, PbColorVWhite);
+
+        textPos.y += 30;
+        int itemRectWidth = 500;
+        int itemRectHeight = 80;
+        Rectangle itemRect = {
+            screenCenter.x - itemRectWidth / 2.0f, textPos.y, itemRectWidth,
+            itemRectHeight
+        };
+        DrawRectangleRoundedLinesEx(itemRect, 0.6, 0, 2, PbColorVGrayLight);
+
+        PBDrawHexagon(
+            (Vector2){itemRect.x + 50, itemRect.y + itemRectHeight / 2.0f},
+            DEFAULT_BUG_SIZE, 1, RED, RED
+        );
+
+        DrawTextEx(
+            font, "Healthy Food: [2]",
+            (Vector2){itemRect.x + 100, itemRect.y + itemRectHeight / 2.0f - 8},
+            16, 1, PbColorVWhite
+        );
+
+        PbIconButton(
+            (Rectangle){
+                itemRect.x + itemRect.width - 80, itemRect.y + 5, 70, 70
+            },
+            ICON_COIN
+        );
+
+        textPos.y += itemRect.height + 30;
+        itemRect = (Rectangle){
+            screenCenter.x - itemRectWidth / 2.0f, textPos.y, itemRectWidth,
+            itemRectHeight
+        };
+        DrawRectangleRoundedLinesEx(itemRect, 0.6, 0, 2, PbColorVGrayLight);
+
+        PBDrawHexagon(
+            (Vector2){itemRect.x + 50, itemRect.y + itemRectHeight / 2.0f},
+            DEFAULT_BUG_SIZE, 1, GREEN, GREEN
+        );
+
+        DrawTextEx(
+            font, "Speedy Food: [3]",
+            (Vector2){itemRect.x + 100, itemRect.y + itemRectHeight / 2.0f - 8},
+            16, 1, PbColorVWhite
+        );
+
+        PbIconButton(
+            (Rectangle){
+                itemRect.x + itemRect.width - 80, itemRect.y + 5, 70, 70
+            },
+            ICON_COIN
+        );
+
+        textPos.y += itemRect.height + 30;
+        itemRect = (Rectangle){
+            screenCenter.x - itemRectWidth / 2.0f, textPos.y, itemRectWidth,
+            itemRectHeight
+        };
+        DrawRectangleRoundedLinesEx(itemRect, 0.6, 0, 2, PbColorVGrayLight);
+
+        PBDrawHexagon(
+            (Vector2){itemRect.x + 50, itemRect.y + itemRectHeight / 2.0f},
+            DEFAULT_BUG_SIZE, 1, BLUE, BLUE
+        );
+
+        DrawTextEx(
+            font, "Scouting Food: [3]",
+            (Vector2){itemRect.x + 100, itemRect.y + itemRectHeight / 2.0f - 8},
+            16, 1, PbColorVWhite
+        );
+
+        PbIconButton(
+            (Rectangle){
+                itemRect.x + itemRect.width - 80, itemRect.y + 5, 70, 70
+            },
+            ICON_COIN
+        );
+    }
+
+    GuiSetStyle(DEFAULT, TEXT_SIZE, ogText);
 }
 
 // Gameplay Screen Draw logic
@@ -113,6 +235,7 @@ void DrawGameplayScreen(void) {
     DrawRectangle(0, 0, SCREEN_SIZE, SCREEN_SIZE, BG_COLOR);
     drawBackground();
 
+    DrawHexFoodList();
     for (int i = 0; i < HexBugCount; i++) {
         DrawHexBug(&HexBugs[i]);
     }
@@ -122,13 +245,9 @@ void DrawGameplayScreen(void) {
     //     WHITE
     //);
 
-    DrawHexFoodList();
-    Rectangle buyBtnRect = {100, 5, 50, 50};
-    if (PbIconButton(buyBtnRect, ICON_COIN)) {
-        TraceLog(LOG_WARNING, "Buy");
-    }
-
     DrawSellingPen();
+
+    DrawHUD();
 }
 
 // Gameplay Screen Unload logic

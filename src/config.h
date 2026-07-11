@@ -7,7 +7,7 @@
 
 // Debug Flags
 #ifndef DEBUG_BUG_RANGE
-#define DEBUG_BUG_RANGE 1
+#define DEBUG_BUG_RANGE 0
 #endif
 
 #ifndef DEBUG_BUG_HEALTH
@@ -15,7 +15,7 @@
 #endif
 
 #ifndef DEBUG_BUG_SPEED
-#define DEBUG_BUG_SPEED 1
+#define DEBUG_BUG_SPEED 0
 #endif
 
 #ifndef DEBUG_NAV_TILES
