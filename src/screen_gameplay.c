@@ -4,6 +4,8 @@
 #include "raylib.h"
 #include "screens.h"
 #include "ui.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #define STB_DS_IMPLEMENTATION
 #include "external/stb_ds.h"
@@ -19,7 +21,6 @@
 
 static int framesCounter = 0;
 static int finishScreen = 0;
-static Color navTileBorder = {255, 100, 100, 20};
 
 HexTerrainTile TerrainTiles[TERRAIN_MAX_TILES];
 int TerrainTileCount = 0;
@@ -27,12 +28,13 @@ int TerrainTileCount = 0;
 HexNavTile NavTiles[NAV_MAX_TILES];
 int NavTileCount = 0;
 
-HexBug *HexBugs;
+HexBug *HexBugs = NULL;
 int HexBugID = 0;
 int HexBugCount = 0;
 
-HexFood HexFoods[MAX_FOODS];
+HexFood *HexFoods = NULL;
 int HexFoodCount = 0;
+int HexFoodID = 0;
 
 static void drawBackground(void) {
     DrawTerrainTiles(TerrainTiles, TerrainTileCount, 1);
@@ -55,7 +57,9 @@ static int getRandomNavTile(void) {
 
 static void initFirstFoods(void) {
     for (int i = 0; i < INIT_FOODS; i++) {
-        HexFoods[HexFoodCount++] = NewHexFood(NavTiles[getRandomNavTile()].pos);
+        int tile = getRandomNavTile();
+        arrput(HexFoods, NewHexFood(NavTiles[tile].pos, tile));
+        HexFoodCount++;
     }
 }
 
@@ -88,6 +92,9 @@ void UpdateGameplayScreen(void) {
     for (int i = 0; i < HexBugCount; i++) {
         BugWalkToTarget(&HexBugs[i], framesCounter);
     }
+    if (framesCounter % 60 == 0) {
+        SpawnRandomFoodAtRandom();
+    }
     framesCounter++;
 }
 
@@ -115,6 +122,7 @@ void DrawGameplayScreen(void) {
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void) {
     arrfree(HexBugs);
+    arrfree(HexFoods);
 }
 
 // Gameplay Screen should finish?

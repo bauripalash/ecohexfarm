@@ -23,7 +23,7 @@
 #endif
 
 #ifndef DEBUG_BUG_TARGET
-#define DEBUG_BUG_TARGET 0
+#define DEBUG_BUG_TARGET 1
 #endif
 
 #endif

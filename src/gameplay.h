@@ -3,7 +3,15 @@
 
 #include "raylib.h"
 #include "utils.h"
+#include <stdbool.h>
 #include <stdlib.h>
+
+typedef struct HexBug HexBug;
+typedef struct HexGene HexGene;
+typedef struct HexNavTile HexNavTile;
+typedef struct HexTerrainTile HexTerrainTile;
+typedef struct HexFood HexFood;
+typedef struct HexVec HexVec;
 
 #define TERRAIN_MAP_RADIUS 2
 #define TERRAIN_MAX_TILES  100
@@ -14,10 +22,11 @@
 #define NAV_TILE_SIZE      DEFAULT_BUG_SIZE
 
 #define MAX_BUGS           100
-#define INIT_BUGS          5
+#define INIT_BUGS          2
 
 #define MAX_FOODS          10
 #define INIT_FOODS         2
+#define FOOD_RADIUS        DEFAULT_BUG_SIZE * 2
 
 #define GARDEN_RADIUS      TERRAIN_TILE_SIZE * 4
 
@@ -26,6 +35,13 @@
 // -----------------------------------------------------------------------------
 //                              HEX_BUG
 // -----------------------------------------------------------------------------
+
+typedef enum HexBugState {
+    HEX_BUG_IDLE,
+    HEX_BUG_WANDERING,
+    HEX_BUG_EATING,
+    HEX_BUG_MATING,
+} HexBugState;
 
 typedef struct HexGene {
     // Health
@@ -42,14 +58,27 @@ typedef struct HexGene {
 typedef struct HexBug {
     int id;
     int listIndex;
+
+    HexGene gene;
+    HexBugState state;
+
+    float hunger;
+    int health;
+    int speed;
+    int range;
+
     int tile;
     int nextTile;
     int target;
+
     int size;
     Vector2 pos;
-    HexGene gene;
-    bool moving;
+
     bool hasFellow;
+    bool foundFood;
+    int foodTile;
+    int foodId;
+
     float colsnRadius;
     float faceAngle;
     Rectangle txtRect;
@@ -90,17 +119,21 @@ typedef struct HexNavTile {
 // -----------------------------------------------------------------------------
 typedef enum HexFoodType {
     HEX_FOOD_REDDISH,
-    HEX_FOOD_GREENING,
+    HEX_FOOD_GREENISH,
     HEX_FOOD_BLUEISH,
     HEX_FOOD_SUPER,
     HEX_FOOD_TYPE_COUNT
 } HexFoodType;
 
 typedef struct HexFood {
+    int id;
+    int index;
     HexFoodType foodType;
     int navTile;
     int terrainTile;
     Vector2 pos;
+    int claimedBy;
+    bool claimed;
 } HexFood;
 
 // -----------------------------------------------------------------------------
@@ -117,8 +150,9 @@ extern HexBug *HexBugs;
 extern int HexBugID;
 extern int HexBugCount;
 
-extern HexFood HexFoods[MAX_FOODS];
+extern HexFood *HexFoods;
 extern int HexFoodCount;
+extern int HexFoodID;
 
 // -----------------------------------------------------------------------------
 //                              HEX_BUG
@@ -154,10 +188,14 @@ void BugWalkToTarget(HexBug *bug, int fc);
 //                              HEX_FOOD
 // -----------------------------------------------------------------------------
 
-HexFood NewHexFood(Vector2 position);
+HexFood NewHexFood(Vector2 position, int tile);
 void UpdateHexFoodList(void);
 void DrawHexFoodList(void);
-
+bool SpawnRandomFoodAtRandom(void);
+void RemoveHexFood(int index);
+bool EatFood(int index);
+int FindFoodByID(int id);
+void ReleaseClaimFood(int id, int bugId);
 // -----------------------------------------------------------------------------
 //                              HEX_GRID
 // -----------------------------------------------------------------------------
