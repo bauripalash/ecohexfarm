@@ -1,5 +1,6 @@
 #include "colors.h"
 #include "config.h"
+#include "draw.h"
 #include "gameplay.h"
 #include "raylib.h"
 #include "screens.h"
@@ -35,6 +36,10 @@ int HexBugCount = 0;
 HexFood *HexFoods = NULL;
 int HexFoodCount = 0;
 int HexFoodID = 0;
+
+Vector2 SellingPenPosition = {0, 0};
+
+int DraggingBugID = -1;
 
 static void drawBackground(void) {
     DrawTerrainTiles(TerrainTiles, TerrainTileCount, 1);
@@ -78,6 +83,10 @@ void InitGameplayScreen(void) {
     BuildNavNeighbors(NavTiles, NavTileCount);
     initFirstBugs();
     initFirstFoods();
+    SellingPenPosition = (Vector2){
+        SCREEN_SIZE - SELLING_PEN_MARGIN - SELLING_PEN_RADIUS,
+        SCREEN_SIZE - SELLING_PEN_MARGIN - SELLING_PEN_RADIUS
+    };
 }
 
 // Gameplay Screen Update logic
@@ -89,6 +98,7 @@ void UpdateGameplayScreen(void) {
         PlaySound(fxCoin);
     }
     */
+    UpdateBugDragging();
     for (int i = 0; i < HexBugCount; i++) {
         BugWalkToTarget(&HexBugs[i], framesCounter);
     }
@@ -107,16 +117,18 @@ void DrawGameplayScreen(void) {
         DrawHexBug(&HexBugs[i]);
     }
 
-    DrawCircleLinesV(
-        (Vector2){(float)SCREEN_CENTER, (float)SCREEN_CENTER}, GARDEN_RADIUS,
-        WHITE
-    );
+    // DrawCircleLinesV(
+    //     (Vector2){(float)SCREEN_CENTER, (float)SCREEN_CENTER}, GARDEN_RADIUS,
+    //     WHITE
+    //);
 
     DrawHexFoodList();
     Rectangle buyBtnRect = {100, 5, 50, 50};
     if (PbIconButton(buyBtnRect, ICON_COIN)) {
         TraceLog(LOG_WARNING, "Buy");
     }
+
+    DrawSellingPen();
 }
 
 // Gameplay Screen Unload logic

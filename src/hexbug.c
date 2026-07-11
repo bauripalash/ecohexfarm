@@ -9,6 +9,7 @@
 #include "utils.h"
 #include <math.h>
 #include <stdbool.h>
+#include <string.h>
 
 static void setRandomBugTarget(HexBug *bug) {
     do {
@@ -102,6 +103,8 @@ HexBug NewHexBug(int color) {
         .faceAngle = 0,
         .txtRect = (Rectangle){0, 0, 0, 0},
         .hunger = 1.0f,
+        .isPenned = false,
+        .dragging = false,
         .txtOrigin =
             (Vector2){
                 ((float)bugBodyTxt.width * BUG_TXT_SCALE) / 2.0f,
@@ -171,7 +174,79 @@ static void updateBugPos(HexBug *bug, Vector2 newPos) {
     }
 }
 
+bool IsBugInPen(HexBug *bug) {
+    if (CheckCollisionCircles(
+            bug->pos, bug->size, SellingPenPosition, SELLING_PEN_RADIUS
+        )) {
+        return true;
+    }
+
+    return false;
+}
+
+void UpdateBugDragging(void) {
+    Vector2 mouse = GetMousePosition();
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        for (int i = 0; i < HexBugCount; i++) {
+            HexBug *bug = &HexBugs[i];
+            if (CheckCollisionPointCircle(mouse, bug->pos, bug->size)) {
+                DraggingBugID = bug->id;
+                bug->dragging = true;
+                break;
+            }
+        }
+    }
+
+    if (DraggingBugID == -1) {
+        return;
+    }
+
+    HexBug *bug = NULL;
+    int bugIndex = FindBugByID(DraggingBugID);
+    if (bugIndex == -1) {
+        DraggingBugID = -1;
+        return;
+    }
+    bug = &HexBugs[bugIndex];
+    bug->pos = mouse;
+    bug->txtRect.x = bug->pos.x;
+    bug->txtRect.y = bug->pos.y;
+
+    if (!IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        return;
+    }
+
+    // Mouse released
+    bug->dragging = false;
+    DraggingBugID = -1;
+    bug->target = -1;
+    bug->nextTile = -1;
+    bug->state = HEX_BUG_IDLE;
+
+    if (IsBugInPen(bug)) {
+        if (bug->foundFood) {
+            ReleaseClaimFood(bug->foodId, bug->id);
+            bug->foundFood = false;
+            bug->foodTile = -1;
+            bug->foodId = -1;
+        }
+
+        bug->isPenned = true;
+    } else {
+        int nearestTile = FindNearestNavTile(bug->pos);
+        if (nearestTile != -1) {
+            bug->tile = nearestTile;
+            bug->pos = NavTiles[nearestTile].pos;
+        }
+
+        bug->isPenned = false;
+    }
+}
+
 void BugWalkToTarget(HexBug *bug, int fc) {
+    if (bug->dragging || bug->isPenned) {
+        return;
+    }
     if (!bug->foundFood) {
         int foodIndex = detectFood(bug);
         if (foodIndex > -1) {
@@ -243,6 +318,7 @@ void BugWalkToTarget(HexBug *bug, int fc) {
         }
 
         if (bug->gene.red <= 0) {
+            ReleaseClaimFood(bug->foodId, bug->id);
             arrdel(HexBugs, bug->listIndex);
             HexBugCount--;
             refreshBugIndexes();

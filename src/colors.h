@@ -27,10 +27,10 @@
 // Velstad-4-by-mainzero Palette by Arkzero87
 // https://lospec.com/palette-list/velstad-4-by-mainzero
 
-#define PbHexColorVGray      PbHexColor(0x131726)
-#define PbHexColorVGrayLight PbHexColor(0x59608e)
-#define PbHexColorVGreen     PbHexColor(0x61b8ae)
-#define PbHexColorVWhite     PbHexColor(0xdde0bd)
+#define PbHexColorVGray      PbHexColor(131726)
+#define PbHexColorVGrayLight PbHexColor(59608e)
+#define PbHexColorVGreen     PbHexColor(61b8ae)
+#define PbHexColorVWhite     PbHexColor(dde0bd)
 
 #define PbColorVGray         PbSolidColor(0x13, 0x17, 0x26)
 #define PbColorVGrayLight    PbSolidColor(0x59, 0x60, 0x8e)

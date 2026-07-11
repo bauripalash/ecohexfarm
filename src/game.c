@@ -1,4 +1,6 @@
+#include "colors.h"
 #include "config.h"
+#include "external/raygui.h"
 #include "raylib.h"
 #include "screens.h"
 
@@ -62,6 +64,7 @@ static void loadResources(void) {
 
     bugBody = LoadImage("resources/artwork/bugbody.png");
     Image bugOutline = LoadImage("resources/artwork/bugoutline.png");
+    GuiSetFont(font);
 
     ImageDraw(
         &bugBody, bugOutline,
@@ -72,6 +75,9 @@ static void loadResources(void) {
     bugBodyTxt = LoadTextureFromImage(bugBody);
     SetTextureFilter(bugBodyTxt, TEXTURE_FILTER_POINT);
     UnloadImage(bugOutline);
+
+    GuiSetStyle(LABEL, TEXT_COLOR_NORMAL, PbHexColorVWhite);
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 8);
 }
 
 static void unloadResources(void) {

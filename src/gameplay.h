@@ -13,24 +13,28 @@ typedef struct HexTerrainTile HexTerrainTile;
 typedef struct HexFood HexFood;
 typedef struct HexVec HexVec;
 
-#define TERRAIN_MAP_RADIUS 2
-#define TERRAIN_MAX_TILES  100
-#define TERRAIN_TILE_SIZE  80.0f
+#define TERRAIN_MAP_RADIUS    2
+#define TERRAIN_MAX_TILES     100
+#define TERRAIN_TILE_SIZE     70.0f
 
-#define NAV_MAP_RADIUS     10
-#define NAV_MAX_TILES      360 * 3
-#define NAV_TILE_SIZE      DEFAULT_BUG_SIZE
+#define NAV_MAP_RADIUS        9
+#define NAV_MAX_TILES         360 * 3
+#define NAV_TILE_SIZE         DEFAULT_BUG_SIZE
 
-#define MAX_BUGS           100
-#define INIT_BUGS          2
+#define MAX_BUGS              100
+#define INIT_BUGS             2
 
-#define MAX_FOODS          10
-#define INIT_FOODS         2
-#define FOOD_RADIUS        DEFAULT_BUG_SIZE * 2
+#define MAX_FOODS             10
+#define INIT_FOODS            2
+#define FOOD_RADIUS           DEFAULT_BUG_SIZE * 2
 
-#define GARDEN_RADIUS      TERRAIN_TILE_SIZE * 4
+#define GARDEN_RADIUS         TERRAIN_TILE_SIZE * 4
 
-#define SCREEN_CENTER      SCREEN_SIZE / 2
+#define SCREEN_CENTER         SCREEN_SIZE / 2
+
+#define SELLING_PEN_THICKNESS 3
+#define SELLING_PEN_RADIUS    70
+#define SELLING_PEN_MARGIN    30
 
 // -----------------------------------------------------------------------------
 //                              HEX_BUG
@@ -73,6 +77,9 @@ typedef struct HexBug {
 
     int size;
     Vector2 pos;
+
+    bool isPenned;
+    bool dragging;
 
     bool hasFellow;
     bool foundFood;
@@ -154,6 +161,15 @@ extern HexFood *HexFoods;
 extern int HexFoodCount;
 extern int HexFoodID;
 
+extern Vector2 SellingPenPosition;
+extern int DraggingBugID;
+
+// -----------------------------------------------------------------------------
+//                              SELLING_PEN
+// -----------------------------------------------------------------------------
+
+void DrawSellingPen(void);
+
 // -----------------------------------------------------------------------------
 //                              HEX_BUG
 // -----------------------------------------------------------------------------
@@ -183,7 +199,7 @@ HexBug NewGenesisBug(bool primary, int tile);
 HexBug NewHexBug(int color);
 void DrawHexBug(HexBug *bug);
 void BugWalkToTarget(HexBug *bug, int fc);
-
+void UpdateBugDragging(void);
 // -----------------------------------------------------------------------------
 //                              HEX_FOOD
 // -----------------------------------------------------------------------------
@@ -224,6 +240,7 @@ int GenerateNavTiles(
 );
 
 int GetBestNeighbor(int tile, int target);
+int FindNearestNavTile(Vector2 pos);
 void BuildNavNeighbors(HexNavTile *tiles, int count);
 void DrawTerrainTiles(HexTerrainTile *tiles, int count, float thickness);
 void DrawNavTiles(HexNavTile *tiles, int count, float thickness);

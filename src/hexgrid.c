@@ -1,7 +1,9 @@
 #include "draw.h"
 #include "gameplay.h"
 #include "raylib.h"
+#include "raymath.h"
 #include "utils.h"
+#include <float.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -94,6 +96,20 @@ int GetBestNeighbor(int tile, int target) {
 
         if (dist < bestDist) {
             best = tn;
+            bestDist = dist;
+        }
+    }
+    return best;
+}
+
+int FindNearestNavTile(Vector2 pos) {
+    int best = -1;
+    float bestDist = FLT_MAX;
+
+    for (int i = 0; i < NavTileCount; i++) {
+        float dist = Vector2DistanceSqr(pos, NavTiles[i].pos);
+        if (dist < bestDist) {
+            best = i;
             bestDist = dist;
         }
     }

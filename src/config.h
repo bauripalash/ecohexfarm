@@ -19,7 +19,7 @@
 #endif
 
 #ifndef DEBUG_NAV_TILES
-#define DEBUG_NAV_TILES 0
+#define DEBUG_NAV_TILES 1
 #endif
 
 #ifndef DEBUG_BUG_TARGET
