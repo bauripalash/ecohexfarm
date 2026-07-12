@@ -2,14 +2,17 @@
 #include "gameplay.h"
 #include "raylib.h"
 #include "screens.h"
+#include "utils.h"
 #include <stdbool.h>
+#include <stdlib.h>
 
-HexFood NewHexFood(Vector2 position, int tile) {
+HexFood NewHexFood(Vector2 position, int tile, HexFoodType ftype, int boost) {
     HexFood food = {
         .id = HexFoodID++,
         .index = HexFoodCount,
         .pos = position,
-        .foodType = HEX_FOOD_REDDISH,
+        .foodType = ftype,
+        .boost = boost,
         .navTile = tile,
         .terrainTile = 0,
         .claimed = false,
@@ -19,18 +22,75 @@ HexFood NewHexFood(Vector2 position, int tile) {
     return food;
 }
 
+static HexFoodType getRandomFoodType(void) {
+    return (HexFoodType)GetRandomValue(HEX_FOOD_REDDISH, HEX_FOOD_SUPER);
+}
+
+bool SpawnFoodAtRandom(HexFoodType ftype) {
+    if (HexFoodCount >= MAX_FOODS) {
+        return false;
+    }
+
+    int tileIndex = GetRandomValue(0, NavTileCount - 1);
+    HexNavTile *tile = &NavTiles[tileIndex];
+
+    if (tile->hasFood) {
+        int i = 0;
+        do {
+            if (i >= NavTileCount) {
+                return false;
+            }
+            tileIndex = GetRandomValue(0, NavTileCount - 1);
+            tile = &NavTiles[tileIndex];
+            i++;
+        } while (tile->hasFood);
+    }
+
+    int boost = ftype == HEX_FOOD_SUPER ? FOOD_SUPER_BOOST : FOOD_MID_BOOST;
+    arrput(HexFoods, NewHexFood(tile->pos, tileIndex, ftype, boost));
+    HexFoodCount++;
+    return true;
+}
+
+int PlaceShopFoodOrder(HexFoodType ftype, int count) {
+    for (int i = 0; i < count; i++) {
+        if (!SpawnFoodAtRandom(ftype)) return i + 1;
+    }
+
+    return count;
+}
+
 bool SpawnRandomFoodAtRandom(void) {
     if (HexFoodCount >= MAX_FOODS) {
         return false;
     }
     int tileIndex = GetRandomValue(0, NavTileCount - 1);
     HexNavTile *tile = &NavTiles[tileIndex];
-    if (!tile->hasFood) {
-        arrput(HexFoods, NewHexFood(tile->pos, tileIndex));
-        HexFoodCount++;
-        return true;
+
+    if (tile->hasFood) {
+        int i = 0;
+        do {
+            if (i >= NavTileCount) {
+                return false;
+            }
+            tileIndex = GetRandomValue(0, NavTileCount - 1);
+            tile = &NavTiles[tileIndex];
+        } while (tile->hasFood);
     }
 
+    HexFoodType ftype;
+    int boost = 0;
+
+    if (GetRandomValue(1, 100) <= FOOD_MEDIUM_CHANCE) {
+        ftype = getRandomFoodType();
+        boost = FOOD_MID_BOOST;
+    } else {
+        ftype = getRandomFoodType();
+        boost = FOOD_WEAK_BOOST;
+    }
+
+    arrput(HexFoods, NewHexFood(tile->pos, tileIndex, ftype, boost));
+    HexFoodCount++;
     return true;
 }
 
@@ -66,8 +126,50 @@ void ReleaseClaimFood(int id, int bugId) {
     }
 }
 
-bool EatFood(int index) {
+bool EatFood(int index, HexBug *bug) {
     if (index < 0 || index >= HexFoodCount) return false;
+    HexFood *food = &HexFoods[index];
+    switch (food->foodType) {
+        case HEX_FOOD_REDDISH: {
+            bug->gene.red = ClampInt(
+                bug->gene.red + food->boost, BUG_MIN_GENE_LIMIT,
+                BUG_MAX_GENE_LIMIT
+            );
+            break;
+        }
+        case HEX_FOOD_GREENISH: {
+            bug->gene.green = ClampInt(
+                bug->gene.green + food->boost, BUG_MIN_GENE_LIMIT,
+                BUG_MAX_GENE_LIMIT
+            );
+            break;
+        }
+        case HEX_FOOD_BLUEISH: {
+            bug->gene.blue = ClampInt(
+                bug->gene.blue + food->boost, BUG_MIN_GENE_LIMIT,
+                BUG_MAX_GENE_LIMIT
+            );
+            break;
+        }
+        case HEX_FOOD_SUPER: {
+            bug->gene.red = ClampInt(
+                bug->gene.red + food->boost, BUG_MIN_GENE_LIMIT,
+                BUG_MAX_GENE_LIMIT
+            );
+            bug->gene.green = ClampInt(
+                bug->gene.green + food->boost, BUG_MIN_GENE_LIMIT,
+                BUG_MAX_GENE_LIMIT
+            );
+            bug->gene.blue = ClampInt(
+                bug->gene.blue + food->boost, BUG_MIN_GENE_LIMIT,
+                BUG_MAX_GENE_LIMIT
+            );
+            break;
+        }
+
+        default: break;
+    }
+    BugSyncGeneColor(bug);
     RemoveHexFood(index);
     return true;
 }
@@ -81,10 +183,10 @@ void UpdateHexFoodList(void) {
 
 static Color getFoodColor(HexFood *food) {
     switch (food->foodType) {
-        case HEX_FOOD_REDDISH: return RED;
-        case HEX_FOOD_GREENISH: return GREEN;
-        case HEX_FOOD_BLUEISH: return BLUE;
-        case HEX_FOOD_SUPER: return WHITE;
+        case HEX_FOOD_REDDISH: return REDDISH_FOOD;
+        case HEX_FOOD_GREENISH: return GREENISH_FOOD;
+        case HEX_FOOD_BLUEISH: return BLUEISH_FOOD;
+        case HEX_FOOD_SUPER: return SUPER_FOOD;
         default: return BLACK;
     }
 }

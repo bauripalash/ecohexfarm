@@ -24,7 +24,7 @@ typedef struct HexVec HexVec;
 #define MAX_BUGS              100
 #define INIT_BUGS             2
 
-#define MAX_FOODS             10
+#define MAX_FOODS             200
 #define INIT_FOODS            2
 #define FOOD_RADIUS           DEFAULT_BUG_SIZE * 2
 
@@ -37,6 +37,39 @@ typedef struct HexVec HexVec;
 #define SELLING_PEN_MARGIN    30
 
 #define INIT_MONEY            10
+
+#define REDDISH_FOOD          (Color){0xff, 0, 0, 0xff}
+#define GREENISH_FOOD         (Color){0, 0xff, 0, 0xff}
+#define BLUEISH_FOOD          (Color){0, 0, 0xff, 0xff}
+#define SUPER_FOOD            (Color){0xff, 0xff, 0xff, 0xff}
+
+#define FOOD_MEDIUM_CHANCE    20
+#define FOOD_WEAK_BOOST       5
+#define FOOD_MID_BOOST        15
+#define FOOD_SUPER_BOOST      50
+
+#define SHOP_BUY_COUNT        5
+
+#define DEFAULT_BUG_SIZE      18
+#define DEFAULT_BUG_THICK     1
+
+#define BUG_MAX_GENE_LIMIT    255
+#define BUG_MIN_GENE_LIMIT    0
+
+#define BUG_MAX_HEALTH        100
+#define BUG_MIN_HEALTH        1
+
+#define BUG_MAX_SPEED         100
+#define BUG_MIN_SPEED         1
+
+#define BUG_MIN_RANGE         DEFAULT_BUG_SIZE
+#define BUG_MAX_RANGE         DEFAULT_BUG_SIZE * 10
+
+#define BUG_BASE_SPEED        127
+#define BUG_BASE_HEALTH       127
+#define BUG_BASE_RANGE        DEFAULT_BUG_SIZE * 3
+
+#define BUG_TXT_SCALE         1.2f
 
 // -----------------------------------------------------------------------------
 //                              HEX_BUG
@@ -127,10 +160,10 @@ typedef struct HexNavTile {
 //                              HEX_FOOD
 // -----------------------------------------------------------------------------
 typedef enum HexFoodType {
-    HEX_FOOD_REDDISH,
-    HEX_FOOD_GREENISH,
-    HEX_FOOD_BLUEISH,
-    HEX_FOOD_SUPER,
+    HEX_FOOD_REDDISH = 0,
+    HEX_FOOD_GREENISH = 1,
+    HEX_FOOD_BLUEISH = 2,
+    HEX_FOOD_SUPER = 3,
     HEX_FOOD_TYPE_COUNT
 } HexFoodType;
 
@@ -138,12 +171,39 @@ typedef struct HexFood {
     int id;
     int index;
     HexFoodType foodType;
+    int boost;
     int navTile;
     int terrainTile;
     Vector2 pos;
     int claimedBy;
     bool claimed;
 } HexFood;
+
+typedef enum HexShopItemType {
+    SHOP_ITEM_NONE = 0,
+    SHOP_FOOD_REDDISH = 1,
+    SHOP_FOOD_GREENISH = 2,
+    SHOP_FOOD_BLUEISH = 3,
+    SHOP_FOOD_SUPER = 4,
+    SHOP_BUG_SUPER = 5,
+    SHOP_CLOSE = 6,
+    SHOP_ITEM_COUNT = 7,
+} HexShopItemType;
+
+static const struct {
+    HexShopItemType item;
+    int price;
+} HexShopPrices[SHOP_ITEM_COUNT + 8] = {
+    {SHOP_ITEM_NONE, 0},    {SHOP_FOOD_REDDISH, 2}, {SHOP_FOOD_GREENISH, 2},
+    {SHOP_FOOD_BLUEISH, 2}, {SHOP_FOOD_SUPER, 5},   {SHOP_BUG_SUPER, 8},
+    {SHOP_CLOSE, 0},        {SHOP_ITEM_COUNT, 0}
+};
+
+typedef enum BuyerDemand {
+    BUY_WANT_RED,
+    BUY_WANT_GREEN,
+    BUY_WANT_BLUE,
+} BuyerDemand;
 
 // -----------------------------------------------------------------------------
 //                              Global Gameplay Data
@@ -167,6 +227,8 @@ extern Vector2 SellingPenPosition;
 extern int DraggingBugID;
 
 extern int Money;
+extern bool HasOrder;
+extern BuyerDemand OrderDemand;
 
 // -----------------------------------------------------------------------------
 //                              SELLING_PEN
@@ -178,44 +240,27 @@ void DrawSellingPen(void);
 //                              HEX_BUG
 // -----------------------------------------------------------------------------
 
-#define DEFAULT_BUG_SIZE   18
-#define DEFAULT_BUG_THICK  1
-
-#define BUG_MAX_GENE_LIMIT 255
-#define BUG_MIN_GENE_LIMIT 0
-
-#define BUG_MAX_HEALTH     100
-#define BUG_MIN_HEALTH     1
-
-#define BUG_MAX_SPEED      100
-#define BUG_MIN_SPEED      1
-
-#define BUG_MIN_RANGE      DEFAULT_BUG_SIZE
-#define BUG_MAX_RANGE      DEFAULT_BUG_SIZE * 10
-
-#define BUG_BASE_SPEED     127
-#define BUG_BASE_HEALTH    127
-#define BUG_BASE_RANGE     DEFAULT_BUG_SIZE * 3
-
-#define BUG_TXT_SCALE      1.2f
-
 HexBug NewGenesisBug(bool primary, int tile);
 HexBug NewHexBug(int color);
 void DrawHexBug(HexBug *bug);
 void BugWalkToTarget(HexBug *bug, int fc);
 void UpdateBugDragging(void);
+void BugSyncGeneColor(HexBug *bug);
 // -----------------------------------------------------------------------------
 //                              HEX_FOOD
 // -----------------------------------------------------------------------------
 
-HexFood NewHexFood(Vector2 position, int tile);
+HexFood NewHexFood(Vector2 position, int tile, HexFoodType ftype, int boost);
 void UpdateHexFoodList(void);
 void DrawHexFoodList(void);
 bool SpawnRandomFoodAtRandom(void);
 void RemoveHexFood(int index);
-bool EatFood(int index);
+bool EatFood(int index, HexBug *bug);
 int FindFoodByID(int id);
 void ReleaseClaimFood(int id, int bugId);
+
+bool SpawnFoodAtRandom(HexFoodType ftype);
+int PlaceShopFoodOrder(HexFoodType ftype, int count);
 // -----------------------------------------------------------------------------
 //                              HEX_GRID
 // -----------------------------------------------------------------------------

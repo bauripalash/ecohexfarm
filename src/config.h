@@ -7,15 +7,15 @@
 
 // Debug Flags
 #ifndef DEBUG_BUG_RANGE
-#define DEBUG_BUG_RANGE 0
+#define DEBUG_BUG_RANGE 1
 #endif
 
 #ifndef DEBUG_BUG_HEALTH
-#define DEBUG_BUG_HEALTH 0
+#define DEBUG_BUG_HEALTH 1
 #endif
 
 #ifndef DEBUG_BUG_SPEED
-#define DEBUG_BUG_SPEED 0
+#define DEBUG_BUG_SPEED 1
 #endif
 
 #ifndef DEBUG_NAV_TILES

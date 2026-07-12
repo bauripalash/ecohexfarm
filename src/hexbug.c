@@ -69,18 +69,19 @@ static float getRange(const HexBug *bug) {
     return result;
 }
 
-static void syncGeneColor(HexBug *bug) {
+void BugSyncGeneColor(HexBug *bug) {
     bug->gene.hColor.r = bug->gene.red;
     bug->gene.hColor.g = bug->gene.green;
     bug->gene.hColor.b = bug->gene.blue;
     bug->gene.hGene = ColorToInt(bug->gene.hColor);
+    bug->colsnRadius = Remap(
+        bug->gene.blue, BUG_MIN_GENE_LIMIT, BUG_MAX_GENE_LIMIT, BUG_MIN_RANGE,
+        BUG_MAX_RANGE
+    );
 }
 
 HexBug NewGenesisBug(bool primary, int tile) {
     HexBug bug =
-        // primary
-        //     ? NewHexBug(ToHex(0xff, 0xff, 0xff))
-        //:
         NewHexBug(ToHex(BUG_BASE_HEALTH, BUG_BASE_SPEED, BUG_BASE_RANGE));
     setRandomBugTarget(&bug);
     bug.tile = tile;
@@ -134,6 +135,51 @@ int FindBugByID(int id) {
     return -1;
 }
 
+static HexGene crossGene(const HexGene *a, const HexGene *b) {
+    HexGene r;
+    r.red = ((a->red + b->red) / 2) + GetRandomValue(-10, 10);
+    r.green = ((a->green + b->green) / 2) + GetRandomValue(-10, 10);
+    r.blue = ((a->blue + b->blue) / 2) + GetRandomValue(-10, 10);
+
+    r.red = ClampInt(r.red, BUG_MIN_GENE_LIMIT, BUG_MAX_GENE_LIMIT);
+    r.green = ClampInt(r.green, BUG_MIN_GENE_LIMIT, BUG_MAX_GENE_LIMIT);
+    r.blue = ClampInt(r.blue, BUG_MIN_GENE_LIMIT, BUG_MAX_GENE_LIMIT);
+
+    r.hColor = (Color){r.red, r.green, r.blue, 0xff};
+    r.hGene = ColorToInt(r.hColor);
+    return r;
+}
+
+void TryMerge(int bugA, int bugB) {
+    int aIndex = FindBugByID(bugA);
+    int bIndex = FindBugByID(bugB);
+
+    if (aIndex == -1 || bIndex == -1) {
+        return;
+    }
+
+    HexBug a = HexBugs[aIndex];
+    HexBug b = HexBugs[bIndex];
+
+    HexGene childGene = crossGene(&a.gene, &b.gene);
+    HexBug child = NewHexBug(childGene.hGene);
+    child.gene = childGene;
+    child.tile = a.tile;
+    child.pos = a.pos;
+    setRandomBugTarget(&child);
+
+    int hiIndex = aIndex > bIndex ? aIndex : bIndex;
+    int loIndex = aIndex > bIndex ? bIndex : aIndex;
+
+    arrdel(HexBugs, hiIndex);
+    arrdel(HexBugs, loIndex);
+    HexBugCount -= 2;
+    refreshBugIndexes();
+    arrput(HexBugs, child);
+    HexBugCount++;
+    refreshBugIndexes();
+}
+
 static void updateBugPos(HexBug *bug, Vector2 newPos) {
     bug->pos = newPos;
     if (bug->state == HEX_BUG_WANDERING) {
@@ -157,7 +203,9 @@ static void updateBugPos(HexBug *bug, Vector2 newPos) {
             if (bug->hunger > 0.8f) {
                 HexBug *fellow = &HexBugs[fellowIndex];
                 if (fellow->hunger > 0.8f) {
-                    TraceLog(LOG_WARNING, "Bug#%d and Bug#%d ready to merge!");
+                    TryMerge(bug->id, fellow->id);
+                    // TraceLog(LOG_WARNING, "Bug#%d and Bug#%d ready to
+                    // merge!");
                 }
             }
         }
@@ -255,10 +303,6 @@ void BugWalkToTarget(HexBug *bug, int fc) {
             bug->foodId = HexFoods[foodIndex].id;
             setBugTargetTile(bug, bug->foodTile);
             bug->nextTile = -1;
-            TraceLog(
-                LOG_WARNING, "Bug#%d found food : %d", bug->listIndex,
-                bug->foodId
-            );
             // return;
         }
     }
@@ -278,11 +322,7 @@ void BugWalkToTarget(HexBug *bug, int fc) {
         if (reachedFood) {
             int foodIndex = FindFoodByID(bug->foodId);
             if (foodIndex != -1) {
-                if (EatFood(foodIndex)) {
-                    bug->hunger = 1.0f;
-                    bug->gene.red += 10;
-                    syncGeneColor(bug);
-                }
+                EatFood(foodIndex, bug);
             }
             bug->foundFood = false;
             bug->foodTile = -1;
@@ -327,7 +367,7 @@ void BugWalkToTarget(HexBug *bug, int fc) {
         bug->gene.red -= (fc % 60 == 0) ? 1.0f : 0;
         bug->gene.red =
             ClampInt(bug->gene.red, BUG_MIN_GENE_LIMIT, BUG_MAX_GENE_LIMIT);
-        syncGeneColor(bug);
+        BugSyncGeneColor(bug);
     }
 }
 

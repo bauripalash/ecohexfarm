@@ -8,5 +8,5 @@
 #define BUTTON_FG_COLOR
 
 bool PbIconButton(Rectangle rect, int icon);
-
+bool PbTextButton(Rectangle rect, const char *text, int fontSize);
 #endif
