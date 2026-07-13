@@ -9,6 +9,7 @@
 #include "utils.h"
 #include <math.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 static void setRandomBugTarget(HexBug *bug) {
@@ -80,13 +81,97 @@ void BugSyncGeneColor(HexBug *bug) {
     );
 }
 
+static int mutateGeneElem(int base, int range) {
+    int d = GetRandomValue(-range, range);
+    return ClampInt(base + d, BUG_MIN_GENE_LIMIT, BUG_MAX_GENE_LIMIT);
+}
+
+HexBug NewSuperBug(int tile) {
+    HexBug bug = NewHexBug(
+        ToHex(BUG_MAX_GENE_LIMIT, BUG_MAX_GENE_LIMIT, BUG_MAX_GENE_LIMIT)
+    );
+    bug.tile = tile;
+    bug.pos = NavTiles[tile].pos;
+    bug.colsnRadius = getRange(&bug);
+    bug.isSuper = true;
+    setRandomBugTarget(&bug);
+    return bug;
+}
+
+bool PlaceShopSuperBugOrder(void) {
+    if (HexBugCount >= MAX_BUGS) {
+        return false;
+    }
+    int tile = GetRandomValue(0, NavTileCount - 1);
+    arrput(HexBugs, NewSuperBug(tile));
+    HexBugCount++;
+
+    return true;
+}
+
+HexBug NewMutatedBug(int tile, int mutation) {
+    int red = mutateGeneElem(BUG_BASE_HEALTH, mutation);
+    int green = mutateGeneElem(BUG_BASE_SPEED, mutation);
+    int blue = mutateGeneElem(BUG_BASE_RANGE / DEFAULT_BUG_SIZE * 20, mutation);
+
+    HexBug bug = NewHexBug(ToHex(red, green, blue));
+    bug.tile = tile;
+    bug.pos = NavTiles[tile].pos;
+    bug.colsnRadius = getRange(&bug);
+    setRandomBugTarget(&bug);
+    return bug;
+}
+
+void MaintainMinimumBugs(void) {
+    if (HexBugCount >= MIN_CUR_BUG || HexBugCount >= MAX_BUGS) {
+        return;
+    }
+
+    int tile = GetRandomValue(0, NavTileCount - 1);
+    arrput(HexBugs, NewMutatedBug(tile, BUG_GENE_MUTATION_RANGE));
+    HexBugCount++;
+    refreshBugIndexes();
+}
+
 HexBug NewGenesisBug(bool primary, int tile) {
     HexBug bug =
         NewHexBug(ToHex(BUG_BASE_HEALTH, BUG_BASE_SPEED, BUG_BASE_RANGE));
-    setRandomBugTarget(&bug);
     bug.tile = tile;
     bug.pos = NavTiles[tile].pos;
+    setRandomBugTarget(&bug);
     return bug;
+}
+
+int getGeneWanted(const HexBug *bug) {
+    switch (OrderDemand) {
+        case DEMAND_WANT_RED: return bug->gene.red;
+        case DEMAND_WANT_GREEN: return bug->gene.green;
+        case DEMAND_WANT_BLUE: return bug->gene.blue;
+    }
+}
+
+bool SellPennedBugs(void) {
+    int earning = 0;
+    for (int i = HexBugCount - 1; i >= 0; i--) {
+        HexBug *bug = &HexBugs[i];
+        if (!bug->isPenned || bug->isSuper) {
+            continue;
+        }
+
+        int geneElem = getGeneWanted(bug);
+        float match = (float)geneElem / (float)BUG_MAX_GENE_LIMIT;
+        int price = (int)(DemandPrice * match);
+        earning += price;
+        arrdel(HexBugs, i);
+        HexBugCount--;
+        // TraceLog(LOG_WARNING, "Selling -> %d | %d out %d", bug->id, price,
+        // DemandPrice);
+    }
+
+    refreshBugIndexes();
+    Money += earning;
+
+    return earning > 0;
 }
 
 HexBug NewHexBug(int color) {
@@ -100,12 +185,15 @@ HexBug NewHexBug(int color) {
         .nextTile = -1,
         .size = DEFAULT_BUG_SIZE,
         .state = HEX_BUG_IDLE,
-        .hasFellow = false,
+        .hasPartner = false,
+        .matingCooldown = BUG_MATE_COOLDOWN,
         .faceAngle = 0,
         .txtRect = (Rectangle){0, 0, 0, 0},
         .hunger = 1.0f,
         .isPenned = false,
         .dragging = false,
+        .isSuper = false,
+        .partnerId = -1,
         .txtOrigin =
             (Vector2){
                 ((float)bugBodyTxt.width * BUG_TXT_SCALE) / 2.0f,
@@ -137,9 +225,12 @@ int FindBugByID(int id) {
 
 static HexGene crossGene(const HexGene *a, const HexGene *b) {
     HexGene r;
-    r.red = ((a->red + b->red) / 2) + GetRandomValue(-10, 10);
-    r.green = ((a->green + b->green) / 2) + GetRandomValue(-10, 10);
-    r.blue = ((a->blue + b->blue) / 2) + GetRandomValue(-10, 10);
+    r.red = ((a->red + b->red) / 2) +
+            GetRandomValue(-BUG_NEW_CHILD_MUTATION, BUG_NEW_CHILD_MUTATION);
+    r.green = ((a->green + b->green) / 2) +
+              GetRandomValue(-BUG_NEW_CHILD_MUTATION, BUG_NEW_CHILD_MUTATION);
+    r.blue = ((a->blue + b->blue) / 2) +
+             GetRandomValue(-BUG_NEW_CHILD_MUTATION, BUG_NEW_CHILD_MUTATION);
 
     r.red = ClampInt(r.red, BUG_MIN_GENE_LIMIT, BUG_MAX_GENE_LIMIT);
     r.green = ClampInt(r.green, BUG_MIN_GENE_LIMIT, BUG_MAX_GENE_LIMIT);
@@ -180,36 +271,85 @@ void TryMerge(int bugA, int bugB) {
     refreshBugIndexes();
 }
 
-static void updateBugPos(HexBug *bug, Vector2 newPos) {
-    bug->pos = newPos;
-    if (bug->state == HEX_BUG_WANDERING) {
-        bug->hasFellow = false;
-        Vector2 pos = bug->pos;
-        int fellowIndex = -1;
-        float colsRadius = getRange(bug);
-        for (int i = 0; i < HexBugCount; i++) {
-            HexBug *fellow = &HexBugs[i];
-            if (fellow->id == bug->id) {
-                continue;
-            }
-            if (CheckCollisionCircles(
-                    pos, colsRadius, fellow->pos, getRange(fellow)
-                )) {
-                bug->hasFellow = true;
-                fellowIndex = i;
-            }
+static bool canMate(const HexBug *bug) {
+    return !bug->isPenned && !bug->dragging && bug->matingCooldown <= 0 &&
+           !bug->hasPartner && bug->gene.red >= MIN_BUG_MATE_HEALTH &&
+           bug->hunger >= 0.5f;
+}
+
+static int detectMate(HexBug *bug) {
+    if (!canMate(bug)) return -1;
+
+    for (int i = 0; i < HexBugCount; i++) {
+        HexBug *other = &HexBugs[i];
+        if (other->id == bug->id || other->hasPartner) {
+            continue;
         }
-        if (bug->hasFellow) {
-            if (bug->hunger > 0.8f) {
-                HexBug *fellow = &HexBugs[fellowIndex];
-                if (fellow->hunger > 0.8f) {
-                    TryMerge(bug->id, fellow->id);
-                    // TraceLog(LOG_WARNING, "Bug#%d and Bug#%d ready to
-                    // merge!");
-                }
-            }
+
+        if (!canMate(other)) {
+            continue;
+        }
+
+        if (CheckCollisionCircles(
+                bug->pos, bug->colsnRadius, other->pos, other->colsnRadius
+            )) {
+            return i;
         }
     }
+
+    return -1;
+}
+
+void BugSeekMate(HexBug *bug, int fc) {
+    if (bug->isPenned || bug->dragging) return;
+    if (bug->matingCooldown > 0) {
+        bug->matingCooldown--;
+    }
+
+    if (bug->hasPartner) {
+        int pidx = FindBugByID(bug->partnerId);
+        if (pidx == -1) {
+            bug->hasPartner = false;
+            bug->partnerId = -1;
+            bug->state = HEX_BUG_IDLE;
+            return;
+        }
+
+        HexBug *partner = &HexBugs[pidx];
+        float speed = getSpeed(bug) * 0.5f;
+        bug->pos = Vector2MoveTowards(bug->pos, partner->pos, speed * GetFrameTime());
+        Vector2 delta = Vector2Subtract(bug->pos, partner->pos);
+        float angleRad = atan2f(delta.y, delta.x);
+        bug->faceAngle = (RAD2DEG * angleRad) + 270.0f;
+        bug->txtRect = (Rectangle){
+            bug->pos.x, bug->pos.y, (float)bugBodyTxt.width * BUG_TXT_SCALE,
+            (float)bugBodyTxt.height * BUG_TXT_SCALE
+        };
+        if (Vector2Distance(bug->pos, partner->pos) <= 0.5f) {
+
+            if (bug->id < partner->id) {
+                TryMerge(bug->id, partner->id);
+            }
+        }
+
+        return;
+    }
+
+    int mate = detectMate(bug);
+    if (mate != -1) {
+        HexBug *partner = &HexBugs[mate];
+        bug->hasPartner = true;
+        bug->partnerId = partner->id;
+        bug->state = HEX_BUG_MATING;
+
+        partner->hasPartner = true;
+        partner->partnerId = bug->id;
+        partner->state = HEX_BUG_MATING;
+    }
+}
+
+static void updateBugPos(HexBug *bug, Vector2 newPos) {
+    bug->pos = newPos;
     if (bug->target != -1) {
         HexNavTile *targetTile = &NavTiles[bug->target];
         Vector2 delta = Vector2Subtract(bug->pos, targetTile->pos);
@@ -291,7 +431,7 @@ void UpdateBugDragging(void) {
     }
 }
 
-void BugWalkToTarget(HexBug *bug, int fc) {
+void UpdateHexBug(HexBug *bug, int fc) {
     if (bug->dragging || bug->isPenned) {
         return;
     }
@@ -364,10 +504,14 @@ void BugWalkToTarget(HexBug *bug, int fc) {
             refreshBugIndexes();
         }
 
-        bug->gene.red -= (fc % 60 == 0) ? 1.0f : 0;
-        bug->gene.red =
-            ClampInt(bug->gene.red, BUG_MIN_GENE_LIMIT, BUG_MAX_GENE_LIMIT);
-        BugSyncGeneColor(bug);
+        bug->hunger += (fc % 3 == 0) ? -0.5f : 0;
+        if (bug->hunger <= 0.0f) {
+            bug->gene.red -= (fc % 60 == 0) ? 1.0f : 0;
+            bug->gene.red =
+                ClampInt(bug->gene.red, BUG_MIN_GENE_LIMIT, BUG_MAX_GENE_LIMIT);
+            BugSyncGeneColor(bug);
+            bug->hunger = 1.0f;
+        }
     }
 }
 
@@ -398,7 +542,7 @@ void DrawHexBug(HexBug *bug) {
     if (DEBUG_BUG_RANGE) {
         float range = getRange(bug);
         DrawCircleLines(
-            bug->pos.x, bug->pos.y, range, bug->hasFellow ? RED : BLUE
+            bug->pos.x, bug->pos.y, range, bug->hasPartner ? RED : BLUE
         );
     }
 
@@ -415,6 +559,9 @@ void DrawHexBug(HexBug *bug) {
         icon = ICON_HELP;
     } else if (bug->isPenned) {
         icon = ICON_STAR;
+    }
+    if (bug->hasPartner) {
+        icon = ICON_HEART;
     }
     GuiDrawIcon(
         icon, bug->pos.x - 8, bug->pos.y - DEFAULT_BUG_SIZE - 16, 1,

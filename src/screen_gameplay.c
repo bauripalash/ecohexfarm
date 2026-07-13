@@ -47,6 +47,7 @@ int Money = INIT_MONEY;
 
 bool HasOrder = false;
 BuyerDemand OrderDemand;
+int DemandPrice = 0;
 
 static void drawBackground(void) {
     DrawTerrainTiles(TerrainTiles, TerrainTileCount, 1);
@@ -106,11 +107,16 @@ void UpdateGameplayScreen(void) {
     }
     */
     if (!showBuyMenu) {
+        UpdateDemand();
+        MaintainMinimumBugs();
         UpdateBugDragging();
         for (int i = 0; i < HexBugCount; i++) {
-            BugWalkToTarget(&HexBugs[i], framesCounter);
+            UpdateHexBug(&HexBugs[i], framesCounter);
         }
-        if (framesCounter % 60 == 0) {
+        for (int i = 0; i < HexBugCount; i++) {
+            BugSeekMate(&HexBugs[i], framesCounter);
+        }
+        if (framesCounter % 120 == 0) {
             SpawnRandomFoodAtRandom();
         }
     }
@@ -170,6 +176,26 @@ static int getUsedPrice(int price, int count, int max) {
     return price;
 }
 
+void UpdateDemand(void) {
+    if (HasOrder) {
+        return;
+    }
+
+    BuyerDemand demand =
+        (BuyerDemand)GetRandomValue(DEMAND_WANT_RED, DEMAND_WANT_BLUE);
+    OrderDemand = demand;
+    DemandPrice = GetRandomValue(5, 30);
+    HasOrder = true;
+}
+
+const char *getDemandName(void) {
+    switch (OrderDemand) {
+        case DEMAND_WANT_RED: return "Healthy";
+        case DEMAND_WANT_GREEN: return "Fast";
+        case DEMAND_WANT_BLUE: return "Scout";
+    }
+}
+
 void handleShopBuying(HexShopItemType item) {
     int price = HexShopPrices[item].price;
     if (price > Money) {
@@ -208,6 +234,17 @@ void handleShopBuying(HexShopItemType item) {
             showMessage("Thank you for buying Super Food");
             break;
         }
+
+        case SHOP_BUG_SUPER: {
+            if (PlaceShopSuperBugOrder()) {
+                Money -= HexShopPrices[SHOP_BUG_SUPER].price;
+                showMessage("Thank you for buying Super Bug");
+            } else {
+                showMessage("X Too many bugs present! X");
+            }
+            break;
+        }
+        default: break;
     }
 }
 
@@ -358,7 +395,7 @@ static HexShopItemType openShop(void) {
     DrawRectangleRoundedLinesEx(itemRect, 0.6, 0, 2, PbColorVGrayLight);
 
     DrawTextEx(
-        font, TextFormat("Super Food: [%d]", HexShopPrices[SHOP_BUG_SUPER]),
+        font, TextFormat("Super Bug: [%d]", HexShopPrices[SHOP_BUG_SUPER]),
         (Vector2){itemRect.x + 100, itemRect.y + itemRectHeight / 2.0f - 8}, 16,
         1, PbColorVWhite
     );
@@ -410,12 +447,18 @@ void DrawHUD(void) {
     GuiLabel(moneyRect, GuiIconText(ICON_COIN, TextFormat("Coins: %d", Money)));
 
     Rectangle sellBtnRect = {SCREEN_SIZE - 300, SCREEN_SIZE - 80, 100, 40};
-    PbTextButton(sellBtnRect, "Sell", 16);
+    if (PbTextButton(sellBtnRect, "Sell", 16)) {
+        if (SellPennedBugs()) {
+            HasOrder = false;
+            UpdateDemand();
+        }
+    }
 
     Rectangle demandRect = {SCREEN_SIZE - 310, 10, 300, 30};
 
     DrawRectangleRoundedLinesEx(demandRect, 0.8f, 0, 3, PbColorTPink);
-    const char *newsText = TextFormat("%s Bugs for %d coins!", "Fast", 8);
+    const char *newsText =
+        TextFormat("!%s Bugs for %d coins!", getDemandName(), DemandPrice);
     int newsTextWidth = strlen(newsText) * 8;
     DrawTextEx(
         font, newsText,

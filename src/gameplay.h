@@ -13,63 +13,70 @@ typedef struct HexTerrainTile HexTerrainTile;
 typedef struct HexFood HexFood;
 typedef struct HexVec HexVec;
 
-#define TERRAIN_MAP_RADIUS    2
-#define TERRAIN_MAX_TILES     100
-#define TERRAIN_TILE_SIZE     70.0f
+#define TERRAIN_MAP_RADIUS      2
+#define TERRAIN_MAX_TILES       100
+#define TERRAIN_TILE_SIZE       70.0f
 
-#define NAV_MAP_RADIUS        9
-#define NAV_MAX_TILES         360 * 3
-#define NAV_TILE_SIZE         DEFAULT_BUG_SIZE
+#define NAV_MAP_RADIUS          9
+#define NAV_MAX_TILES           360 * 3
+#define NAV_TILE_SIZE           DEFAULT_BUG_SIZE
 
-#define MAX_BUGS              100
-#define INIT_BUGS             2
+#define MAX_BUGS                100
+#define INIT_BUGS               2
 
-#define MAX_FOODS             200
-#define INIT_FOODS            2
-#define FOOD_RADIUS           DEFAULT_BUG_SIZE * 2
+#define MAX_FOODS               200
+#define INIT_FOODS              2
+#define FOOD_RADIUS             DEFAULT_BUG_SIZE * 2
 
-#define GARDEN_RADIUS         TERRAIN_TILE_SIZE * 4
+#define GARDEN_RADIUS           TERRAIN_TILE_SIZE * 4
 
-#define SCREEN_CENTER         SCREEN_SIZE / 2
+#define SCREEN_CENTER           SCREEN_SIZE / 2
 
-#define SELLING_PEN_THICKNESS 3
-#define SELLING_PEN_RADIUS    70
-#define SELLING_PEN_MARGIN    30
+#define SELLING_PEN_THICKNESS   3
+#define SELLING_PEN_RADIUS      70
+#define SELLING_PEN_MARGIN      30
 
-#define INIT_MONEY            10
+#define INIT_MONEY              10
 
-#define REDDISH_FOOD          (Color){0xff, 0, 0, 0xff}
-#define GREENISH_FOOD         (Color){0, 0xff, 0, 0xff}
-#define BLUEISH_FOOD          (Color){0, 0, 0xff, 0xff}
-#define SUPER_FOOD            (Color){0xff, 0xff, 0xff, 0xff}
+#define REDDISH_FOOD            (Color){0xff, 0, 0, 0xff}
+#define GREENISH_FOOD           (Color){0, 0xff, 0, 0xff}
+#define BLUEISH_FOOD            (Color){0, 0, 0xff, 0xff}
+#define SUPER_FOOD              (Color){0xff, 0xff, 0xff, 0xff}
 
-#define FOOD_MEDIUM_CHANCE    20
-#define FOOD_WEAK_BOOST       5
-#define FOOD_MID_BOOST        15
-#define FOOD_SUPER_BOOST      50
+#define FOOD_MEDIUM_CHANCE      20
+#define FOOD_WEAK_BOOST         5
+#define FOOD_MID_BOOST          15
+#define FOOD_SUPER_BOOST        50
 
-#define SHOP_BUY_COUNT        5
+#define SHOP_BUY_COUNT          5
 
-#define DEFAULT_BUG_SIZE      18
-#define DEFAULT_BUG_THICK     1
+#define DEFAULT_BUG_SIZE        18
+#define DEFAULT_BUG_THICK       1
 
-#define BUG_MAX_GENE_LIMIT    255
-#define BUG_MIN_GENE_LIMIT    0
+#define BUG_MAX_GENE_LIMIT      255
+#define BUG_MIN_GENE_LIMIT      0
 
-#define BUG_MAX_HEALTH        100
-#define BUG_MIN_HEALTH        1
+#define BUG_MAX_HEALTH          100
+#define BUG_MIN_HEALTH          1
 
-#define BUG_MAX_SPEED         100
-#define BUG_MIN_SPEED         1
+#define BUG_MAX_SPEED           100
+#define BUG_MIN_SPEED           1
 
-#define BUG_MIN_RANGE         DEFAULT_BUG_SIZE
-#define BUG_MAX_RANGE         DEFAULT_BUG_SIZE * 10
+#define BUG_MIN_RANGE           DEFAULT_BUG_SIZE
+#define BUG_MAX_RANGE           DEFAULT_BUG_SIZE * 10
 
-#define BUG_BASE_SPEED        127
-#define BUG_BASE_HEALTH       127
-#define BUG_BASE_RANGE        DEFAULT_BUG_SIZE * 3
+#define BUG_BASE_SPEED          127
+#define BUG_BASE_HEALTH         127
+#define BUG_BASE_RANGE          DEFAULT_BUG_SIZE * 3
 
-#define BUG_TXT_SCALE         1.2f
+#define BUG_TXT_SCALE           1.2f
+
+#define BUG_MATE_COOLDOWN       60 * 5
+#define BUG_GENE_MUTATION_RANGE 15
+#define BUG_NEW_CHILD_MUTATION  10
+
+#define MIN_CUR_BUG             3
+#define MIN_BUG_MATE_HEALTH     80
 
 // -----------------------------------------------------------------------------
 //                              HEX_BUG
@@ -116,10 +123,14 @@ typedef struct HexBug {
     bool isPenned;
     bool dragging;
 
-    bool hasFellow;
+    bool hasPartner;
+    int partnerId;
+    int matingCooldown;
     bool foundFood;
     int foodTile;
     int foodId;
+
+    bool isSuper;
 
     float colsnRadius;
     float faceAngle;
@@ -200,9 +211,9 @@ static const struct {
 };
 
 typedef enum BuyerDemand {
-    BUY_WANT_RED,
-    BUY_WANT_GREEN,
-    BUY_WANT_BLUE,
+    DEMAND_WANT_RED = 0,
+    DEMAND_WANT_GREEN = 1,
+    DEMAND_WANT_BLUE = 2,
 } BuyerDemand;
 
 // -----------------------------------------------------------------------------
@@ -229,6 +240,9 @@ extern int DraggingBugID;
 extern int Money;
 extern bool HasOrder;
 extern BuyerDemand OrderDemand;
+extern int DemandPrice;
+
+void UpdateDemand(void);
 
 // -----------------------------------------------------------------------------
 //                              SELLING_PEN
@@ -243,9 +257,16 @@ void DrawSellingPen(void);
 HexBug NewGenesisBug(bool primary, int tile);
 HexBug NewHexBug(int color);
 void DrawHexBug(HexBug *bug);
-void BugWalkToTarget(HexBug *bug, int fc);
+void UpdateHexBug(HexBug *bug, int fc);
 void UpdateBugDragging(void);
 void BugSyncGeneColor(HexBug *bug);
+
+HexBug NewSuperBug(int tile);
+HexBug NewMutatedBug(int tile, int mutation);
+void MaintainMinimumBugs(void);
+bool PlaceShopSuperBugOrder(void);
+bool SellPennedBugs(void);
+void BugSeekMate(HexBug *bug, int fc);
 // -----------------------------------------------------------------------------
 //                              HEX_FOOD
 // -----------------------------------------------------------------------------

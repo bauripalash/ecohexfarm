@@ -1,4 +1,4 @@
-PROJECT:=ecohex
+PROJECT:=ecohexfarm
 BUILD_DIR:=build
 WEB_BUILD_DIR:=buildweb
 HEADERS=$(shell find src/ -path 'src/gen' -prune -o -path 'src/external' -prune -o -path 'src/tmpl' -prune -o -name '*.h' -print)
