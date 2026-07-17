@@ -286,7 +286,9 @@ static HexShopItemType openShop(void) {
 
     DrawTextEx(
         font,
-        TextFormat("Healthy Food: [%d]", HexShopPrices[SHOP_FOOD_REDDISH]),
+        TextFormat(
+            "Healthy Food: [%d]", HexShopPrices[SHOP_FOOD_REDDISH].price
+        ),
         (Vector2){itemRect.x + 100, itemRect.y + itemRectHeight / 2.0f - 8}, 16,
         1, PbColorVWhite
     );
@@ -315,7 +317,9 @@ static HexShopItemType openShop(void) {
 
     DrawTextEx(
         font,
-        TextFormat("Speedy Food: [%d]", HexShopPrices[SHOP_FOOD_GREENISH]),
+        TextFormat(
+            "Speedy Food: [%d]", HexShopPrices[SHOP_FOOD_GREENISH].price
+        ),
         (Vector2){itemRect.x + 100, itemRect.y + itemRectHeight / 2.0f - 8}, 16,
         1, PbColorVWhite
     );
@@ -344,7 +348,9 @@ static HexShopItemType openShop(void) {
 
     DrawTextEx(
         font,
-        TextFormat("Scouting Food: [%d]", HexShopPrices[SHOP_FOOD_BLUEISH]),
+        TextFormat(
+            "Scouting Food: [%d]", HexShopPrices[SHOP_FOOD_BLUEISH].price
+        ),
         (Vector2){itemRect.x + 100, itemRect.y + itemRectHeight / 2.0f - 8}, 16,
         1, PbColorVWhite
     );
@@ -372,7 +378,8 @@ static HexShopItemType openShop(void) {
     );
 
     DrawTextEx(
-        font, TextFormat("Super Food: [%d]", HexShopPrices[SHOP_FOOD_SUPER]),
+        font,
+        TextFormat("Super Food: [%d]", HexShopPrices[SHOP_FOOD_SUPER].price),
         (Vector2){itemRect.x + 100, itemRect.y + itemRectHeight / 2.0f - 8}, 16,
         1, PbColorVWhite
     );
@@ -395,7 +402,8 @@ static HexShopItemType openShop(void) {
     DrawRectangleRoundedLinesEx(itemRect, 0.6, 0, 2, PbColorVGrayLight);
 
     DrawTextEx(
-        font, TextFormat("Super Bug: [%d]", HexShopPrices[SHOP_BUG_SUPER]),
+        font,
+        TextFormat("Super Bug: [%d]", HexShopPrices[SHOP_BUG_SUPER].price),
         (Vector2){itemRect.x + 100, itemRect.y + itemRectHeight / 2.0f - 8}, 16,
         1, PbColorVWhite
     );

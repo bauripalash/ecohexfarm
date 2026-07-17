@@ -317,7 +317,8 @@ void BugSeekMate(HexBug *bug, int fc) {
 
         HexBug *partner = &HexBugs[pidx];
         float speed = getSpeed(bug) * 0.5f;
-        bug->pos = Vector2MoveTowards(bug->pos, partner->pos, speed * GetFrameTime());
+        bug->pos =
+            Vector2MoveTowards(bug->pos, partner->pos, speed * GetFrameTime());
         Vector2 delta = Vector2Subtract(bug->pos, partner->pos);
         float angleRad = atan2f(delta.y, delta.x);
         bug->faceAngle = (RAD2DEG * angleRad) + 270.0f;
