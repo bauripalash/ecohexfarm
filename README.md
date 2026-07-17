@@ -17,6 +17,7 @@ Drag and drop with mouse
 
 ![_](media/screenshots/ecohexfarm_ss_1.png "ecoHexFarm screenshot 1")
 ![_](media/screenshots/ecohexfarm_ss_2.png "ecoHexFarm screenshot 2")
+![_](media/screenshots/ecohexfarm_shop.png "ecoHexFarm shop")
 
 ### Developers
 
