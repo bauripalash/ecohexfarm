@@ -1,6 +1,6 @@
-## EcoHexFarm
+![EcoHexFarm](media/images/ecohexfarm_banner.png "ecoHexFarm")
 
-![EcoHexFarm](images/screenshots/ecohexfarm_ss_1.png "ecoHexFarm")
+## ecoHexFarm
 
 ### Description
 ecoHexFarm also known as Ecological Hexa(gonal/decimal) Farming Game, is a slow-paced farming simulator featuring autonomous 'evolvable' bugs with genetic traits, they merge and create offspring. Breed bugs, manage food and sell bugs with genetic traits similar to the market demand, and get rich.
@@ -15,8 +15,8 @@ Drag and drop with mouse
 
 ### Screenshots
 
-![_](images/screenshots/ecohexfarm_ss_1.png "ecoHexFarm screenshot 1")
-![_](images/screenshots/ecohexfarm_ss_2.png "ecoHexFarm screenshot 2")
+![_](media/screenshots/ecohexfarm_ss_1.png "ecoHexFarm screenshot 1")
+![_](media/screenshots/ecohexfarm_ss_2.png "ecoHexFarm screenshot 2")
 
 ### Developers
 
